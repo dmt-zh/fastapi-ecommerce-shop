@@ -5,7 +5,6 @@ products_router = APIRouter(
     tags=['products'],
 )
 
-
 @products_router.get('/')
 async def get_all_products():
     """Возвращает список всех товаров."""
