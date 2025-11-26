@@ -1,0 +1,113 @@
+#####################################################################################################
+# general
+#####################################################################################################
+
+[project]
+name = "fastapi-project"
+version = "0.1.0"
+description = "FastAPI Интернет-магазин"
+readme = "README.md"
+authors = [
+    {name = "Dmitry Zhigalo"}
+]
+requires-python = ">=3.13"
+
+#####################################################################################################
+# dependencies
+#####################################################################################################
+
+dependencies = [
+    "alembic>=1.17.2",
+    "fastapi>=0.121.3",
+    "orjson>=3.11.4",
+    "pydantic>=2.12.4",
+    "sqlalchemy>=2.0.44",
+    "uvicorn[standard]>=0.38.0",
+]
+
+[dependency-groups]
+lint = [
+    "isort>=7.0.0",
+    "poethepoet>=0.37.0",
+    "ruff>=0.12.10",
+]
+
+#####################################################################################################
+# ruff
+#####################################################################################################
+
+[tool.ruff]
+line-length = 150
+target-version = "py312"
+cache-dir = "~/.cache/ruff"
+preview = true
+exclude = [
+  ".git",
+  ".venv",
+  "rag/prompts*",
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 88
+quote-style = "single"
+
+[tool.ruff.lint]
+select = [
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "COM",    # flake8-commas
+    "PIE",    # flake8-pie
+    "T20",    # flake8-print
+    "RET",    # flake8-return
+    "SIM",    # flake8-simplify
+    "N",      # pep8-naming
+    "N",      # pep8-naming
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "PL",     # pylint
+    "F",      # pyflakes
+    "UP",     # pyupgrade
+    "RUF",    # ruff-specific rules
+    "TRY",    # tryceratops
+    "D101",
+    "D103",
+]
+allowed-confusables = ["е", "с", "о", "г"]
+ignore = [
+    "E302", # blank-lines-top-level
+    "E305", # blank-lines-after-function-or-class
+]
+
+[tool.ruff.lint.per-file-ignores]
+"src/models/categories.py" = ["D101", "F821"]
+"src/models/products.py" = ["D101", "F821"]
+"src/routers/categories.py" = ["E712", "B008"]
+"src/services/database.py" = ["D101"]
+
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+#####################################################################################################
+# isort
+#####################################################################################################
+
+[tool.isort]
+py_version = 312
+line_length = 120
+combine_as_imports = true
+combine_star = true
+lexicographical = true
+src_paths = ['src']
+remove_redundant_aliases = false
+include_trailing_comma = true
+color_output = true
+multi_line_output = 3
+
+#####################################################################################################
+# poe
+#####################################################################################################
+
+[tool.poe.tasks]
+isort = "isort --jobs -1 ."

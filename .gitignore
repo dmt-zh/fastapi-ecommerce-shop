@@ -1,0 +1,9 @@
+# Virtual environments
+.venv
+.env
+
+# Dirs and files
+migrations
+*.log
+ecomerce.db
+sql_alchemy.py
