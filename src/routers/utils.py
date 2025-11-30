@@ -3,9 +3,9 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.selectable import Select
+
 from src.models import Category as CategoryModel, Product as ProductModel
-from src.schemas import CategoryCreate, ProductCreate
-from src.services import get_db
+from src.schemas import CategoryCreate
 
 ##############################################################################################
 
@@ -33,7 +33,7 @@ def _validate_parent_category(category: CategoryCreate | int, database: Session)
 
 ##############################################################################################
 
-def _validate_product_by_id(product_id: int, database: Session) -> None:
+def _validate_product_by_id(product_id: int, database: Session) -> ProductModel | None:
     """Проверяется наличие товара по указанному идентификатору."""
 
     sql_query = select(ProductModel).where(
@@ -43,5 +43,6 @@ def _validate_product_by_id(product_id: int, database: Session) -> None:
     product_item = database.scalars(sql_query).first()
     if product_item is None:
         raise HTTPException(status_code=404, detail='Product not found')
+    return product_item
 
 ##############################################################################################

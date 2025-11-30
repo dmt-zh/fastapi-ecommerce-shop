@@ -8,6 +8,6 @@ notes_router = APIRouter(
 @notes_router.get('/')
 async def get_all_notes() -> dict:
     """Возвращает список всех заметок."""
-    #TODO:
+    # TODO:
 
     return {'message': 'Notes API is working'}

@@ -1,14 +1,15 @@
 from collections.abc import Mapping, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.selectable import Select
-from src.models import Product as ProductModel
-from src.schemas import Product as ProductSchema, ProductCreate, CategoryCreate
-from src.services import get_db
-from src.routers.utils import _validate_parent_category, _validate_product_by_id
 
+from src.models import Product as ProductModel
+from src.routers.utils import _validate_parent_category, _validate_product_by_id
+from src.schemas import Product as ProductSchema, ProductCreate
+from src.services import get_db
+
+##############################################################################################
 
 products_router = APIRouter(
     prefix='/products',
@@ -57,15 +58,16 @@ async def create_product(
 )
 async def get_products_by_category(
     category_id: int,
-    database: Session = Depends(get_db)
+    database: Session = Depends(get_db),
 ) -> Sequence[ProductSchema] | list:
     """Возвращает список товаров в указанной категории по её ID."""
 
     _validate_parent_category(category_id, database)
     sql_query = select(ProductModel).where(
         ProductModel.category_id == category_id,
-        ProductModel.is_active == True
+        ProductModel.is_active == True,
     )
+
     return database.scalars(sql_query).all()
 
 ##############################################################################################
@@ -78,29 +80,53 @@ async def get_products_by_category(
 async def get_product(product_id: int, database: Session = Depends(get_db)) -> ProductSchema:
     """Возвращает детальную информацию о товаре по его ID."""
 
-    _validate_product_by_id(product_id, database)
-    sql_query = select(ProductModel).where(ProductModel.id == product_id)
-    product = database.scalars(sql_query).first()
+    product = _validate_product_by_id(product_id, database)
     _validate_parent_category(product.category_id, database)
 
     return product
 
 ##############################################################################################
 
-@products_router.put('/{product_id}')
-async def update_product(product_id: int):
+@products_router.put(
+    path='/{product_id}',
+    response_model=ProductSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def update_product(
+    product_id: int,
+    product: ProductCreate,
+    database: Session = Depends(get_db),
+) -> ProductSchema:
     """Обновляет товар по его ID."""
-    #TODO:
 
-    return {'message': f'Товар {product_id} обновлён (заглушка)'}
+    product_to_update = _validate_product_by_id(product_id, database)
+    _validate_parent_category(product_to_update.category_id, database)
+
+    database.execute(
+        update(ProductModel)
+        .where(ProductModel.id == product_id)
+        .values(**product.model_dump()),
+    )
+    database.commit()
+    database.refresh(product_to_update)
+
+    return product_to_update
 
 ##############################################################################################
 
-@products_router.delete('/{product_id}')
-async def delete_product(product_id: int):
+@products_router.delete(
+    path='/{product_id}',
+    status_code=status.HTTP_200_OK,
+)
+async def delete_product(product_id: int, database: Session = Depends(get_db)) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
-    #TODO:
 
-    return {'message': f'Товар {product_id} удалён (заглушка)'}
+    _validate_product_by_id(product_id, database)
+    database.execute(
+        update(ProductModel).where(ProductModel.id == product_id).values(is_active=False),
+    )
+    database.commit()
+
+    return {'status': 'success', 'message': 'Product marked as inactive'}
 
 ##############################################################################################

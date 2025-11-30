@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+
 from src.routers import categories_router, products_router
 
 app = FastAPI(

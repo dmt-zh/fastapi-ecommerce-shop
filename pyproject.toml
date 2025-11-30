@@ -82,8 +82,9 @@ ignore = [
 "src/models/categories.py" = ["D101", "F821"]
 "src/models/products.py" = ["D101", "F821"]
 "src/routers/categories.py" = ["E712", "B008"]
+"src/routers/products.py" = ["E712", "B008"]
 "src/services/database.py" = ["D101"]
-
+"src/routers/utils.py" = ["E712"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
