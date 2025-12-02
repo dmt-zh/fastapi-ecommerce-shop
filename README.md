@@ -146,7 +146,7 @@ from src import models
 target_metadata = Base.metadata
 ```
 
-- установить значение `url` равное `DATABASE_URL` в функции `run_async_migrations`:
+- изменить инициализацию конфига в функции `run_async_migrations`:
 ```python
 async def run_async_migrations() -> None:
     """In this scenario we need to create an Engine
