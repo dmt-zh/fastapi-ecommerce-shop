@@ -8,21 +8,30 @@ help: # Отображение сообщения с доступными ком
 init-migrations: # Инициализация среды миграций
 	@uv run alembic init src/migrations
 
-create-tables: # Создание таблиц базы данных
-	@uv run alembic revision --autogenerate -m 'create db tables'
+init-async-migrations: # Инициализация среды миграций для ассинхронного взаимодействия
+	@uv run alembic init -t async src/migrations
+
+database-up: # Инициализация среды миграций для ассинхронного взаимодействия
+	@docker compose up -d
+
+database-down: # Инициализация среды миграций для ассинхронного взаимодействия
+	@docker compose down
+
+create-tables-migration: # Создание таблиц базы данных
+	@uv run alembic revision --autogenerate -m 'Initial migration for PostgreSQL'
 
 apply-migrations: # Применение миграции
 	@uv run alembic upgrade head
 
 run-app: # Запуск приложения
-	@uv run uvicorn src.main:app --port 8000
+	@nohup uv run uvicorn src.main:app --port 8000 &> backend_server.log
 
 run-app-dev: # Запуск приложения
 	@uv run uvicorn src.main:app --port 8000 --reload
 
-lint-check: # Check code for linting issues without making changes
+lint-check: # Проверка кода на наличие ошибок без внесения изменений
 	@uv run poe isort
 	@uv run ruff check $(CHECK_DIRS)
 
-lint-fix: # Fix linting issues using ruff
+lint-fix: # Исправление ошибок в коде с помощью ruff
 	@uv run ruff check --fix $(CHECK_DIRS)

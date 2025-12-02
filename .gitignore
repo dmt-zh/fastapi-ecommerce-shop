@@ -3,7 +3,14 @@
 .env
 
 # Dirs and files
-migrations
+.DS_Store
+Thumbs.db
 *.log
 ecomerce.db
 sql_alchemy.py
+.idea/
+src/migrations/*
+!src/migrations/env.py
+!src/migrations/README
+!src/migrations/script.py.mako
+_*

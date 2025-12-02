@@ -1,4 +1,3 @@
-from src.services.database import Base
-from src.services.db_depends import get_db
+from src.services.database import Base, DATABASE_URL
 
-__all__ = ['Base', 'get_db']
+__all__ = ['Base', 'DATABASE_URL']

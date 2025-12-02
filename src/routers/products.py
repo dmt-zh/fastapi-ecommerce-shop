@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from src.models import Product as ProductModel
 from src.routers.utils import _validate_parent_category, _validate_product_by_id
 from src.schemas import Product as ProductSchema, ProductCreate
-from src.services import get_db
+from src.dependencies import SyncDatabaseDep
 
 ##############################################################################################
 
@@ -22,7 +22,7 @@ products_router = APIRouter(
     path='/',
     response_model=Sequence[ProductSchema],
 )
-async def get_all_products(database: Session = Depends(get_db)) -> Sequence[ProductSchema] | list:
+async def get_all_products(database: SyncDatabaseDep) -> Sequence[ProductSchema] | list:
     """Возвращает список всех товаров."""
 
     sql_query = select(ProductModel).where(ProductModel.is_active == True)
@@ -37,7 +37,7 @@ async def get_all_products(database: Session = Depends(get_db)) -> Sequence[Prod
 )
 async def create_product(
     product: ProductCreate,
-    database: Session = Depends(get_db),
+    database: SyncDatabaseDep,
 ) -> ProductSchema:
     """Создаёт новый товар."""
 
@@ -58,7 +58,7 @@ async def create_product(
 )
 async def get_products_by_category(
     category_id: int,
-    database: Session = Depends(get_db),
+    database: SyncDatabaseDep,
 ) -> Sequence[ProductSchema] | list:
     """Возвращает список товаров в указанной категории по её ID."""
 
@@ -77,7 +77,7 @@ async def get_products_by_category(
     response_model=ProductSchema,
     status_code=status.HTTP_200_OK,
 )
-async def get_product(product_id: int, database: Session = Depends(get_db)) -> ProductSchema:
+async def get_product(product_id: int, database: SyncDatabaseDep) -> ProductSchema:
     """Возвращает детальную информацию о товаре по его ID."""
 
     product = _validate_product_by_id(product_id, database)
@@ -95,7 +95,7 @@ async def get_product(product_id: int, database: Session = Depends(get_db)) -> P
 async def update_product(
     product_id: int,
     product: ProductCreate,
-    database: Session = Depends(get_db),
+    database: SyncDatabaseDep,
 ) -> ProductSchema:
     """Обновляет товар по его ID."""
 
@@ -118,7 +118,7 @@ async def update_product(
     path='/{product_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_product(product_id: int, database: Session = Depends(get_db)) -> Mapping[str, str]:
+async def delete_product(product_id: int, database: SyncDatabaseDep) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
 
     _validate_product_by_id(product_id, database)

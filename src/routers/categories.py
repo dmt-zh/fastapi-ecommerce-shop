@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from src.models import Category as CategoryModel
 from src.routers.utils import _build_category_query, _validate_parent_category
 from src.schemas import Category as CategorySchema, CategoryCreate
-from src.services import get_db
+from src.dependencies import SyncDatabaseDep
 
 ##############################################################################################
 
@@ -22,7 +22,7 @@ categories_router = APIRouter(
     path='/',
     response_model=Sequence[CategorySchema],
 )
-async def get_all_categories(database: Session = Depends(get_db)) -> Sequence[CategorySchema] | list:
+async def get_all_categories(database: SyncDatabaseDep) -> Sequence[CategorySchema] | list:
     """Возвращает список всех категорий товаров."""
 
     sql_query = select(CategoryModel).where(CategoryModel.is_active == True)
@@ -35,7 +35,7 @@ async def get_all_categories(database: Session = Depends(get_db)) -> Sequence[Ca
     response_model=CategorySchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_category(category: CategoryCreate, database: Session = Depends(get_db)) -> CategorySchema:
+async def create_category(category: CategoryCreate, database: SyncDatabaseDep) -> CategorySchema:
     """Создаёт новую категорию."""
 
     _validate_parent_category(category, database)
@@ -55,7 +55,7 @@ async def create_category(category: CategoryCreate, database: Session = Depends(
 async def update_category(
     category_id: int,
     category: CategoryCreate,
-    database: Session = Depends(get_db),
+    database: SyncDatabaseDep,
 ) -> CategorySchema:
     """Обновляет категорию по её ID."""
 
@@ -85,7 +85,7 @@ async def update_category(
     path='/{category_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_category(category_id: int, database: Session = Depends(get_db)) -> Mapping[str, str]:
+async def delete_category(category_id: int, database: SyncDatabaseDep) -> Mapping[str, str]:
     """Удаляет категорию по её ID."""
 
     sql_query = _build_category_query(category_id)
