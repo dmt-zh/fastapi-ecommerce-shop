@@ -88,6 +88,7 @@ ignore = [
 "src/routers/products.py" = ["E712", "B008"]
 "src/services/database.py" = ["D101"]
 "src/routers/utils.py" = ["E712"]
+"src/migrations/env.py" = ["D103", "E712"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

@@ -1,13 +1,12 @@
 from collections.abc import Mapping, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select, update
-from sqlalchemy.orm import Session
 
+from src.dependencies import ASyncDatabaseDep
 from src.models import Category as CategoryModel
 from src.routers.utils import _build_category_query, _validate_parent_category
 from src.schemas import Category as CategorySchema, CategoryCreate
-from src.dependencies import SyncDatabaseDep
 
 ##############################################################################################
 
@@ -22,11 +21,12 @@ categories_router = APIRouter(
     path='/',
     response_model=Sequence[CategorySchema],
 )
-async def get_all_categories(database: SyncDatabaseDep) -> Sequence[CategorySchema] | list:
+async def get_all_categories(database: ASyncDatabaseDep) -> Sequence[CategorySchema] | list:
     """Возвращает список всех категорий товаров."""
 
     sql_query = select(CategoryModel).where(CategoryModel.is_active == True)
-    return database.scalars(sql_query).all()
+    categories = await database.scalars(sql_query)
+    return categories.all()
 
 ##############################################################################################
 
@@ -35,14 +35,13 @@ async def get_all_categories(database: SyncDatabaseDep) -> Sequence[CategorySche
     response_model=CategorySchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_category(category: CategoryCreate, database: SyncDatabaseDep) -> CategorySchema:
+async def create_category(category: CategoryCreate, database: ASyncDatabaseDep) -> CategorySchema:
     """Создаёт новую категорию."""
 
-    _validate_parent_category(category, database)
+    await _validate_parent_category(category, database)
     new_category = CategoryModel(**category.model_dump())
     database.add(new_category)
-    database.commit()
-    database.refresh(new_category)
+    await database.commit()
 
     return new_category
 
@@ -55,27 +54,27 @@ async def create_category(category: CategoryCreate, database: SyncDatabaseDep) -
 async def update_category(
     category_id: int,
     category: CategoryCreate,
-    database: SyncDatabaseDep,
+    database: ASyncDatabaseDep,
 ) -> CategorySchema:
     """Обновляет категорию по её ID."""
 
     sql_query = _build_category_query(category_id)
-    category_to_update = database.scalars(sql_query).first()
+    categories = await database.scalars(sql_query)
+    category_to_update = categories.first()
     if category_to_update is None:
         raise HTTPException(
             status_code=404,
             detail='Category not found',
         )
 
-    _validate_parent_category(category, database)
-
-    database.execute(
+    await _validate_parent_category(category, database)
+    values_to_update = category.model_dump(exclude_unset=True)
+    await database.execute(
         update(CategoryModel)
         .where(CategoryModel.id == category_id)
-        .values(**category.model_dump()),
+        .values(**values_to_update),
     )
-    database.commit()
-    database.refresh(category_to_update)
+    await database.commit()
 
     return category_to_update
 
@@ -85,18 +84,19 @@ async def update_category(
     path='/{category_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_category(category_id: int, database: SyncDatabaseDep) -> Mapping[str, str]:
+async def delete_category(category_id: int, database: ASyncDatabaseDep) -> Mapping[str, str]:
     """Удаляет категорию по её ID."""
 
     sql_query = _build_category_query(category_id)
-    category = database.scalars(sql_query).first()
+    categories = await database.scalars(sql_query)
+    category = categories.first()
     if category is None:
         raise HTTPException(status_code=404, detail='Category not found')
 
-    database.execute(
+    await database.execute(
         update(CategoryModel).where(CategoryModel.id == category_id).values(is_active=False),
     )
-    database.commit()
+    await database.commit()
 
     return {'status': 'success', 'message': 'Category marked as inactive'}
 

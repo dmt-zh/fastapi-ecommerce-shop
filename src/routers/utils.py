@@ -1,7 +1,7 @@
 
 from fastapi import HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 
 from src.models import Category as CategoryModel, Product as ProductModel
@@ -20,20 +20,21 @@ def _build_category_query(category: CategoryCreate | int) -> Select:
 
 ##############################################################################################
 
-def _validate_parent_category(category: CategoryCreate | int, database: Session) -> None:
+async def _validate_parent_category(category: CategoryCreate | int, database: AsyncSession) -> None:
     """Проверяется наличие родительской категории."""
 
     if isinstance(category, CategoryCreate) and category.parent_id is None:
         return
 
     sql_query = _build_category_query(category)
-    parent_category = database.scalars(sql_query).first()
+    categories = await database.scalars(sql_query)
+    parent_category = categories.first()
     if parent_category is None:
         raise HTTPException(status_code=400, detail='Parent category not found')
 
 ##############################################################################################
 
-def _validate_product_by_id(product_id: int, database: Session) -> ProductModel | None:
+def _validate_product_by_id(product_id: int, database: AsyncSession) -> ProductModel | None:
     """Проверяется наличие товара по указанному идентификатору."""
 
     sql_query = select(ProductModel).where(

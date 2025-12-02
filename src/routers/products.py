@@ -1,13 +1,12 @@
 from collections.abc import Mapping, Sequence
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, status
 from sqlalchemy import select, update
-from sqlalchemy.orm import Session
 
+from src.dependencies import SyncDatabaseDep
 from src.models import Product as ProductModel
 from src.routers.utils import _validate_parent_category, _validate_product_by_id
 from src.schemas import Product as ProductSchema, ProductCreate
-from src.dependencies import SyncDatabaseDep
 
 ##############################################################################################
 
