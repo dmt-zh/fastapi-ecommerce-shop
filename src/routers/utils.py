@@ -34,14 +34,15 @@ async def _validate_parent_category(category: CategoryCreate | int, database: As
 
 ##############################################################################################
 
-def _validate_product_by_id(product_id: int, database: AsyncSession) -> ProductModel | None:
+async def _validate_product_by_id(product_id: int, database: AsyncSession) -> ProductModel | None:
     """Проверяется наличие товара по указанному идентификатору."""
 
     sql_query = select(ProductModel).where(
         ProductModel.id == product_id,
         ProductModel.is_active == True,
     )
-    product_item = database.scalars(sql_query).first()
+    products = await database.scalars(sql_query)
+    product_item = products.first()
     if product_item is None:
         raise HTTPException(status_code=404, detail='Product not found')
     return product_item

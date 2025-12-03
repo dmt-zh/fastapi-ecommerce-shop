@@ -3,7 +3,7 @@ from collections.abc import Mapping, Sequence
 from fastapi import APIRouter, status
 from sqlalchemy import select, update
 
-from src.dependencies import SyncDatabaseDep
+from src.dependencies import ASyncDatabaseDep
 from src.models import Product as ProductModel
 from src.routers.utils import _validate_parent_category, _validate_product_by_id
 from src.schemas import Product as ProductSchema, ProductCreate
@@ -21,11 +21,12 @@ products_router = APIRouter(
     path='/',
     response_model=Sequence[ProductSchema],
 )
-async def get_all_products(database: SyncDatabaseDep) -> Sequence[ProductSchema] | list:
+async def get_all_products(database: ASyncDatabaseDep) -> Sequence[ProductSchema] | list:
     """Возвращает список всех товаров."""
 
     sql_query = select(ProductModel).where(ProductModel.is_active == True)
-    return database.scalars(sql_query).all()
+    products = await database.scalars(sql_query)
+    return products.all()
 
 ##############################################################################################
 
@@ -36,15 +37,14 @@ async def get_all_products(database: SyncDatabaseDep) -> Sequence[ProductSchema]
 )
 async def create_product(
     product: ProductCreate,
-    database: SyncDatabaseDep,
+    database: ASyncDatabaseDep,
 ) -> ProductSchema:
     """Создаёт новый товар."""
 
-    _validate_parent_category(product.category_id, database)
+    await _validate_parent_category(product.category_id, database)
     new_product = ProductModel(**product.model_dump())
     database.add(new_product)
-    database.commit()
-    database.refresh(new_product)
+    await database.commit()
 
     return new_product
 
@@ -57,17 +57,18 @@ async def create_product(
 )
 async def get_products_by_category(
     category_id: int,
-    database: SyncDatabaseDep,
+    database: ASyncDatabaseDep,
 ) -> Sequence[ProductSchema] | list:
     """Возвращает список товаров в указанной категории по её ID."""
 
-    _validate_parent_category(category_id, database)
+    await _validate_parent_category(category_id, database)
     sql_query = select(ProductModel).where(
         ProductModel.category_id == category_id,
         ProductModel.is_active == True,
     )
+    products = await database.scalars(sql_query)
 
-    return database.scalars(sql_query).all()
+    return products.all()
 
 ##############################################################################################
 
@@ -76,11 +77,11 @@ async def get_products_by_category(
     response_model=ProductSchema,
     status_code=status.HTTP_200_OK,
 )
-async def get_product(product_id: int, database: SyncDatabaseDep) -> ProductSchema:
+async def get_product(product_id: int, database: ASyncDatabaseDep) -> ProductSchema:
     """Возвращает детальную информацию о товаре по его ID."""
 
-    product = _validate_product_by_id(product_id, database)
-    _validate_parent_category(product.category_id, database)
+    product = await _validate_product_by_id(product_id, database)
+    await _validate_parent_category(product.category_id, database)
 
     return product
 
@@ -94,20 +95,19 @@ async def get_product(product_id: int, database: SyncDatabaseDep) -> ProductSche
 async def update_product(
     product_id: int,
     product: ProductCreate,
-    database: SyncDatabaseDep,
+    database: ASyncDatabaseDep,
 ) -> ProductSchema:
     """Обновляет товар по его ID."""
 
-    product_to_update = _validate_product_by_id(product_id, database)
-    _validate_parent_category(product_to_update.category_id, database)
+    product_to_update = await _validate_product_by_id(product_id, database)
+    await _validate_parent_category(product_to_update.category_id, database)
 
-    database.execute(
+    await database.execute(
         update(ProductModel)
         .where(ProductModel.id == product_id)
         .values(**product.model_dump()),
     )
-    database.commit()
-    database.refresh(product_to_update)
+    await database.commit()
 
     return product_to_update
 
@@ -117,14 +117,14 @@ async def update_product(
     path='/{product_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_product(product_id: int, database: SyncDatabaseDep) -> Mapping[str, str]:
+async def delete_product(product_id: int, database: ASyncDatabaseDep) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
 
-    _validate_product_by_id(product_id, database)
-    database.execute(
+    await _validate_product_by_id(product_id, database)
+    await database.execute(
         update(ProductModel).where(ProductModel.id == product_id).values(is_active=False),
     )
-    database.commit()
+    await database.commit()
 
     return {'status': 'success', 'message': 'Product marked as inactive'}
 
