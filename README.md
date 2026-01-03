@@ -107,17 +107,16 @@ make help
 
 В результате будет получен следующий вывод:
 ```
-› help: Отображение сообщения с доступными командами
-› init-migrations: Инициализация среды миграций
-› init-async-migrations: Инициализация среды миграций для ассинхронного взаимодействия
-› database-up: Инициализация среды миграций для ассинхронного взаимодействия
-› database-down: Инициализация среды миграций для ассинхронного взаимодействия
-› create-tables-migration: Создание таблиц базы данных
-› apply-migrations: Применение миграции
-› run-app: Запуск приложения
-› run-app-dev: Запуск приложения
-› lint-check: Проверка кода на наличие ошибок без внесения изменений
-› lint-fix: Исправление ошибок в коде с помощью ruff
+› help:                       Отображение сообщения с доступными командами
+› init-migrations:            Инициализация среды миграций
+› database-up:                Запуск базы данных PostgreSQL в контейнере
+› database-down:              Остановка базы данных PostgreSQL
+› create-tables-migration:    Создание таблиц базы данных
+› apply-migrations:           Применение миграции
+› run-app:                    Запуск приложения
+› run-app-dev:                Запуск приложения во время разработки
+› lint-check:                 Проверка кода на наличие ошибок без внесения изменений
+› lint-fix:                   Исправление ошибок в коде с помощью ruff
 ```
 
 Запускаем контейнер с базой данных PostgreSQL:
@@ -125,9 +124,9 @@ make help
 make database-up
 ```
 
-Cоздадим новую среду миграций, оптимизированную для асинхронного взаимодействия с SQLAlchemy
+Cоздадим новую среду миграций, для взаимодействия с SQLAlchemy
 ```sh
-make init-async-migrations
+make init-migrations
 ```
 
 В результате:
@@ -136,10 +135,12 @@ make init-async-migrations
 
 
 Далее необходимо выполнить изменения в файле `./src/migrations/env.py`:
-- импортировать `Base` и `DATABASE_URL` из `src.services`, а также модели `Category` и `Product`:
+- импортировать `Base` и `PostgreSQLDatabase` из `src.services.database.postgresq`, а также модели `Category` и `Product`:
 ```python
-from src.services import Base, DATABASE_URL
 from src import models
+from src.services.database.postgresql import Base, PostgreSQLDatabase
+from src.config import get_settings
+DATABASE_URL = PostgreSQLDatabase(settings=get_settings()).database_url
 ```
 - установить значение `target_metadata` равное `Base.metadata`:
 ```python

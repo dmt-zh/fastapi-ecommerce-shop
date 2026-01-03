@@ -1,13 +1,25 @@
-# Virtual environments
-.venv
+# JetBrains IDE
+.idea/
+
+# VS Code (keep settings.json for Python config)
+.vscode/*
+!.vscode/settings.json
+
+# Environments
 .env
+.venv
+env/
+venv/
+ENV/
 
 # Dirs and files
 .DS_Store
 Thumbs.db
 *.log
 ecomerce.db
+ecommerce
 sql_alchemy.py
+endpoints.py
 .idea/
 src/migrations/*
 !src/migrations/env.py

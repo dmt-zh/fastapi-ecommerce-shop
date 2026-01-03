@@ -1,12 +1,17 @@
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from src.services import DATABASE_URL, Base
+from alembic import context
+
+from src import models
+from src.services.database.postgresql import Base, PostgreSQLDatabase
+from src.config import get_settings
+DATABASE_URL = PostgreSQLDatabase(settings=get_settings()).database_url
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

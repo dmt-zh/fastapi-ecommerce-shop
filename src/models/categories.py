@@ -1,7 +1,9 @@
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.services import Base
+# from src.services.database import Base
+from src.services.database.postgresql import Base
+# from src.services.database.base import Base
 
 
 class Category(Base):

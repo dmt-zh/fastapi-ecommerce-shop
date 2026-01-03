@@ -3,25 +3,25 @@ from collections.abc import Mapping, Sequence
 from fastapi import APIRouter, status
 from sqlalchemy import select, update
 
-from src.dependencies import ASyncDatabaseDep
+from src.dependencies import AsyncDatabaseDep
 from src.models import Product as ProductModel
-from src.routers.utils import _validate_parent_category, _validate_product_by_id
+from src.routes.utils import _validate_parent_category, _validate_product_by_id
 from src.schemas import Product as ProductSchema, ProductCreate
 
 ##############################################################################################
 
-products_router = APIRouter(
+router = APIRouter(
     prefix='/products',
     tags=['products'],
 )
 
 ##############################################################################################
 
-@products_router.get(
+@router.get(
     path='/',
     response_model=Sequence[ProductSchema],
 )
-async def get_all_products(database: ASyncDatabaseDep) -> Sequence[ProductSchema] | list:
+async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductSchema] | list:
     """Возвращает список всех товаров."""
 
     sql_query = select(ProductModel).where(ProductModel.is_active == True)
@@ -30,14 +30,14 @@ async def get_all_products(database: ASyncDatabaseDep) -> Sequence[ProductSchema
 
 ##############################################################################################
 
-@products_router.post(
+@router.post(
     path='/',
     response_model=ProductSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_product(
     product: ProductCreate,
-    database: ASyncDatabaseDep,
+    database: AsyncDatabaseDep,
 ) -> ProductSchema:
     """Создаёт новый товар."""
 
@@ -50,14 +50,14 @@ async def create_product(
 
 ##############################################################################################
 
-@products_router.get(
+@router.get(
     path='/category/{category_id}',
     response_model=Sequence[ProductSchema],
     status_code=status.HTTP_200_OK,
 )
 async def get_products_by_category(
     category_id: int,
-    database: ASyncDatabaseDep,
+    database: AsyncDatabaseDep,
 ) -> Sequence[ProductSchema] | list:
     """Возвращает список товаров в указанной категории по её ID."""
 
@@ -72,12 +72,12 @@ async def get_products_by_category(
 
 ##############################################################################################
 
-@products_router.get(
+@router.get(
     path='/{product_id}',
     response_model=ProductSchema,
     status_code=status.HTTP_200_OK,
 )
-async def get_product(product_id: int, database: ASyncDatabaseDep) -> ProductSchema:
+async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductSchema:
     """Возвращает детальную информацию о товаре по его ID."""
 
     product = await _validate_product_by_id(product_id, database)
@@ -87,7 +87,7 @@ async def get_product(product_id: int, database: ASyncDatabaseDep) -> ProductSch
 
 ##############################################################################################
 
-@products_router.put(
+@router.put(
     path='/{product_id}',
     response_model=ProductSchema,
     status_code=status.HTTP_200_OK,
@@ -95,7 +95,7 @@ async def get_product(product_id: int, database: ASyncDatabaseDep) -> ProductSch
 async def update_product(
     product_id: int,
     product: ProductCreate,
-    database: ASyncDatabaseDep,
+    database: AsyncDatabaseDep,
 ) -> ProductSchema:
     """Обновляет товар по его ID."""
 
@@ -113,11 +113,11 @@ async def update_product(
 
 ##############################################################################################
 
-@products_router.delete(
+@router.delete(
     path='/{product_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_product(product_id: int, database: ASyncDatabaseDep) -> Mapping[str, str]:
+async def delete_product(product_id: int, database: AsyncDatabaseDep) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
 
     await _validate_product_by_id(product_id, database)

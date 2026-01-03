@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -11,23 +11,37 @@ ENV_FILE_PATH = PROJECT_ROOT.joinpath('.env')
 # Base Config
 # ---------------------------------------------------------------------------------------------
 class BaseConfigSettings(BaseSettings):
-    """Базовый конфиг для формирования переменных из .env файла."""
+    """Переменные окружения приложения."""
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file=['.env', str(ENV_FILE_PATH)],
-        env_file_encoding='utf-8',
+        env_file_encoding='utf8',
         extra='ignore',
         frozen=True,
         case_sensitive=False,
     )
 
-
 # ---------------------------------------------------------------------------------------------
 # Main Settings
 # ---------------------------------------------------------------------------------------------
 class Settings(BaseConfigSettings):
-    """Переменные окружения приложения."""
+    """Настройки приложения."""
+
+    api_debug: bool
+    api_version: str
+    api_environment: Literal['development', 'staging', 'production']
+    api_service_name: str
 
     postgres_user: str
     postgres_password: str
     postgres_db: str
+    postgres_echo_sql: bool
+
+##############################################################################################
+
+def get_settings() -> Settings:
+    """Получение настроек на основании переменных окружения."""
+
+    return Settings()
+
+##############################################################################################

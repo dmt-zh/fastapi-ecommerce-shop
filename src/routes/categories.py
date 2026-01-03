@@ -3,25 +3,25 @@ from collections.abc import Mapping, Sequence
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select, update
 
-from src.dependencies import ASyncDatabaseDep
+from src.dependencies import AsyncDatabaseDep
 from src.models import Category as CategoryModel
-from src.routers.utils import _build_category_query, _validate_parent_category
+from src.routes.utils import _build_category_query, _validate_parent_category
 from src.schemas import Category as CategorySchema, CategoryCreate
 
 ##############################################################################################
 
-categories_router = APIRouter(
+router = APIRouter(
     prefix='/categories',
     tags=['categories'],
 )
 
 ##############################################################################################
 
-@categories_router.get(
+@router.get(
     path='/',
     response_model=Sequence[CategorySchema],
 )
-async def get_all_categories(database: ASyncDatabaseDep) -> Sequence[CategorySchema] | list:
+async def get_all_categories(database: AsyncDatabaseDep) -> Sequence[CategorySchema] | list:
     """Возвращает список всех категорий товаров."""
 
     sql_query = select(CategoryModel).where(CategoryModel.is_active == True)
@@ -30,12 +30,12 @@ async def get_all_categories(database: ASyncDatabaseDep) -> Sequence[CategorySch
 
 ##############################################################################################
 
-@categories_router.post(
+@router.post(
     path='/',
     response_model=CategorySchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_category(category: CategoryCreate, database: ASyncDatabaseDep) -> CategorySchema:
+async def create_category(category: CategoryCreate, database: AsyncDatabaseDep) -> CategorySchema:
     """Создаёт новую категорию."""
 
     await _validate_parent_category(category, database)
@@ -47,14 +47,14 @@ async def create_category(category: CategoryCreate, database: ASyncDatabaseDep) 
 
 ##############################################################################################
 
-@categories_router.put(
+@router.put(
     path='/{category_id}',
     response_model=CategorySchema,
 )
 async def update_category(
     category_id: int,
     category: CategoryCreate,
-    database: ASyncDatabaseDep,
+    database: AsyncDatabaseDep,
 ) -> CategorySchema:
     """Обновляет категорию по её ID."""
 
@@ -80,11 +80,11 @@ async def update_category(
 
 ##############################################################################################
 
-@categories_router.delete(
+@router.delete(
     path='/{category_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_category(category_id: int, database: ASyncDatabaseDep) -> Mapping[str, str]:
+async def delete_category(category_id: int, database: AsyncDatabaseDep) -> Mapping[str, str]:
     """Удаляет категорию по её ID."""
 
     sql_query = _build_category_query(category_id)

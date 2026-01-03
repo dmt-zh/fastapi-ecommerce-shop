@@ -1,7 +1,7 @@
 from decimal import Decimal
-
 from pydantic import BaseModel, ConfigDict, Field
 
+##############################################################################################
 
 class Product(BaseModel):
     """Модель для ответа с данными товара. Используется в GET-запросах."""
@@ -56,3 +56,5 @@ class ProductCreate(BaseModel):
         description='Количество товара на складе (0 или больше)',
     )
     category_id: int = Field(description='ID категории, к которой относится товар')
+
+##############################################################################################
