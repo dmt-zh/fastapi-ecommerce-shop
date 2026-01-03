@@ -1,10 +1,8 @@
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-# from src.services.database import Base
 from src.services.database.postgresql import Base
-# from src.services.database.base import Base
 
+##############################################################################################
 
 class Category(Base):
     __tablename__ = 'categories'
@@ -22,3 +20,5 @@ class Category(Base):
         remote_side='Category.id',
     )
     children: Mapped[list['Category']] = relationship(back_populates='parent')
+
+##############################################################################################

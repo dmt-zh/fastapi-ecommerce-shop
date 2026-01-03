@@ -2,11 +2,9 @@ from decimal import Decimal
 
 from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-# from src.services import Base
 from src.services.database.postgresql import Base
-# from src.services.database.base import Base
 
+##############################################################################################
 
 class Product(Base):
     __tablename__ = 'products'
@@ -20,3 +18,5 @@ class Product(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     category_id: Mapped[int] = mapped_column(ForeignKey('categories.id'), nullable=False)
     category: Mapped['Category'] = relationship(back_populates='products')
+
+##############################################################################################
