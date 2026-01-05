@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from os import environ
-from src.routes import categories, products
+from src.routes import categories, products, users
 from src.config import get_settings
 from src.services.database.factory import make_database
 from src.utils import setup_logger
@@ -42,6 +42,7 @@ app = FastAPI(
 
 app.include_router(categories.router)
 app.include_router(products.router)
+app.include_router(users.router)
 
 ##############################################################################################
 
