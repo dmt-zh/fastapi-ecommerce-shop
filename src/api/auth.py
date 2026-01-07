@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from src.config import get_settings
 from src.dependencies import AsyncDatabaseDep
-from src.models.users import User as UserModel
+from src.models import User as UserModel
 
 ##############################################################################################
 
@@ -42,7 +42,7 @@ def create_access_token(data: dict) -> str:
 
 ##############################################################################################
 
-async def get_current_user(database: AsyncDatabaseDep, token: str = Depends(oauth2_scheme)):
+async def get_current_user(database: AsyncDatabaseDep, token: str = Depends(oauth2_scheme)) -> UserModel:
     """Проверяет JWT и возвращает пользователя из базы."""
 
     credentials_exception = HTTPException(
@@ -76,5 +76,14 @@ async def get_current_user(database: AsyncDatabaseDep, token: str = Depends(oaut
         raise credentials_exception from None
 
     return user
+
+##############################################################################################
+
+async def get_current_seller(current_user: UserModel = Depends(get_current_user)) -> UserModel:
+    """Проверяет, что пользователь имеет роль 'seller'."""
+
+    if current_user.role != "seller":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Only sellers can perform this action')
+    return current_user
 
 ##############################################################################################

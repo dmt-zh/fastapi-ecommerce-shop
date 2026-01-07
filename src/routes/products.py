@@ -1,10 +1,11 @@
 from collections.abc import Mapping, Sequence
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 
+from src.api.auth import get_current_seller
 from src.dependencies import AsyncDatabaseDep
-from src.models import Product as ProductModel
+from src.models import Product as ProductModel, User as UserModel
 from src.routes.utils import _validate_parent_category, _validate_product_by_id
 from src.schemas import Product as ProductSchema, ProductCreate
 
@@ -30,23 +31,18 @@ async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductSchema
 
 ##############################################################################################
 
-@router.post(
-    path='/',
+@router.get(
+    path='/{product_id}',
     response_model=ProductSchema,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
-async def create_product(
-    product: ProductCreate,
-    database: AsyncDatabaseDep,
-) -> ProductSchema:
-    """Создаёт новый товар."""
+async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductSchema:
+    """Возвращает детальную информацию о товаре по его ID."""
 
+    product = await _validate_product_by_id(product_id, database)
     await _validate_parent_category(product.category_id, database)
-    new_product = ProductModel(**product.model_dump())
-    database.add(new_product)
-    await database.commit()
 
-    return new_product
+    return product
 
 ##############################################################################################
 
@@ -72,18 +68,25 @@ async def get_products_by_category(
 
 ##############################################################################################
 
-@router.get(
-    path='/{product_id}',
+@router.post(
+    path='/',
     response_model=ProductSchema,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
 )
-async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductSchema:
-    """Возвращает детальную информацию о товаре по его ID."""
+async def create_product(
+    product: ProductCreate,
+    database: AsyncDatabaseDep,
+    current_user: UserModel = Depends(get_current_seller),
+) -> ProductSchema:
+    """Создаёт новый товар."""
 
-    product = await _validate_product_by_id(product_id, database)
     await _validate_parent_category(product.category_id, database)
+    new_product = ProductModel(**product.model_dump(), seller_id=current_user.id)
+    database.add(new_product)
+    await database.commit()
+    await database.refresh(new_product)
 
-    return product
+    return new_product
 
 ##############################################################################################
 
@@ -96,11 +99,18 @@ async def update_product(
     product_id: int,
     product: ProductCreate,
     database: AsyncDatabaseDep,
+    current_user: UserModel = Depends(get_current_seller),
 ) -> ProductSchema:
     """Обновляет товар по его ID."""
 
     product_to_update = await _validate_product_by_id(product_id, database)
     await _validate_parent_category(product_to_update.category_id, database)
+
+    if product_to_update.seller_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You can only update your own products',
+        )
 
     await database.execute(
         update(ProductModel)
@@ -108,6 +118,7 @@ async def update_product(
         .values(**product.model_dump()),
     )
     await database.commit()
+    await database.refresh(product_to_update)
 
     return product_to_update
 
@@ -117,15 +128,26 @@ async def update_product(
     path='/{product_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_product(product_id: int, database: AsyncDatabaseDep) -> Mapping[str, str]:
+async def delete_product(
+    product_id: int,
+    database: AsyncDatabaseDep,
+    current_user: UserModel = Depends(get_current_seller),
+) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
 
-    await _validate_product_by_id(product_id, database)
+    product_to_delete = await _validate_product_by_id(product_id, database)
+    if product_to_delete.seller_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='You can only delete your own products',
+        )
+
     await database.execute(
         update(ProductModel).where(ProductModel.id == product_id).values(is_active=False),
     )
     await database.commit()
+    await database.refresh(product_to_delete)
 
-    return {'status': 'success', 'message': 'Product marked as inactive'}
+    return {'status': 'success', 'message': f'Product with id [{product_id}] marked as inactive'}
 
 ##############################################################################################
