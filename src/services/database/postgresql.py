@@ -1,14 +1,15 @@
-from contextlib import contextmanager
 from logging import Logger
-from src.config import Settings
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
+from src.config import Settings
+
 ##############################################################################################
 
 class Base(DeclarativeBase):
-    pass
+    """Базовый класс для декларативных моделей базы данных."""
 
 ##############################################################################################
 
@@ -57,7 +58,7 @@ class PostgreSQLDatabase:
             await conn.close()
 
         except ConnectionRefusedError:
-            self._logger.exception(f'Failed to initialize PostgreSQL database')
+            self._logger.exception('Failed to initialize PostgreSQL database')
             raise
 
     ##########################################################################################

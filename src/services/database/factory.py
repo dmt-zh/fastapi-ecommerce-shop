@@ -1,4 +1,5 @@
 from logging import Logger
+
 from src.config import Settings
 from src.services.database.postgresql import PostgreSQLDatabase
 

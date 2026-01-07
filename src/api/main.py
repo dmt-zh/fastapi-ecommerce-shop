@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
+from os import environ
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from os import environ
-from src.routes import categories, products, users
+
 from src.config import get_settings
+from src.routes import categories, products, users
 from src.services.database.factory import make_database
 from src.utils import setup_logger
 
@@ -15,6 +17,11 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> None:
+    """Управляет жизненным циклом приложения FastAPI.
+
+    Выполняет инициализацию ресурсов перед запуском приложения и их
+    корректное освобождение при завершении работы.
+    """
 
     settings = get_settings()
     app.state.settings = settings

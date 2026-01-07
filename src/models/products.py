@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.services.database.postgresql import Base
 
 ##############################################################################################

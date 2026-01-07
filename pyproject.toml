@@ -28,6 +28,8 @@ dependencies = [
     "uvicorn[standard]>=0.38.0",
     "passlib>=1.7.4",
     "bcrypt==4.0.1",
+    "pyjwt>=2.10.1",
+    "python-multipart>=0.0.21",
 ]
 
 [dependency-groups]
@@ -84,11 +86,15 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"src/api/auth.py" = ["E712"]
+"src/api/main.py" = ["PLW1508"]
 "src/models/categories.py" = ["D101", "F821"]
 "src/models/products.py" = ["D101", "F821"]
-"src/routers/categories.py" = ["E712", "B008"]
-"src/routers/products.py" = ["E712", "B008"]
-"src/routers/utils.py" = ["E712"]
+"src/models/users.py" = ["D101", "F821"]
+"src/routes/products.py" = ["E712", "B008"]
+"src/routes/categories.py" = ["E712"]
+"src/routes/utils.py" = ["E712"]
+"src/routes/users.py" = ["E712"]
 "src/migrations/env.py" = ["D103", "E712"]
 
 [tool.ruff.lint.flake8-tidy-imports]

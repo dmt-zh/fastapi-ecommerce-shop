@@ -31,6 +31,9 @@ class Settings(BaseConfigSettings):
     api_version: str
     api_environment: Literal['development', 'staging', 'production']
     api_service_name: str
+    api_secret_key: str
+    api_access_token_expire_minutes: int | float
+    api_jwt_encode_algorithm: str
 
     postgres_user: str
     postgres_password: str

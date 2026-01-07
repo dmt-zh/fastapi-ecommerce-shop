@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.services.database.postgresql import Base
 
 ##############################################################################################
