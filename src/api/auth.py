@@ -82,8 +82,15 @@ async def get_current_user(database: AsyncDatabaseDep, token: str = Depends(oaut
 async def get_current_seller(current_user: UserModel = Depends(get_current_user)) -> UserModel:
     """Проверяет, что пользователь имеет роль 'seller'."""
 
-    if current_user.role != "seller":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Only sellers can perform this action')
+    if current_user.role != 'seller':
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Only sellers can perform this action.')
+    return current_user
+
+##############################################################################################
+
+async def is_admin(current_user: UserModel = Depends(get_current_user)):
+    if current_user.role != 'admin':
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Only admin can change or add new categories.')
     return current_user
 
 ##############################################################################################

@@ -1,10 +1,11 @@
 from collections.abc import Mapping, Sequence
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 
+from src.api.auth import is_admin
 from src.dependencies import AsyncDatabaseDep
-from src.models import Category as CategoryModel
+from src.models import Category as CategoryModel, User as UserModel
 from src.routes.utils import _build_category_query, _validate_parent_category
 from src.schemas import Category as CategorySchema, CategoryCreate
 
@@ -35,7 +36,11 @@ async def get_all_categories(database: AsyncDatabaseDep) -> Sequence[CategorySch
     response_model=CategorySchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_category(category: CategoryCreate, database: AsyncDatabaseDep) -> CategorySchema:
+async def create_category(
+    category: CategoryCreate,
+    database: AsyncDatabaseDep,
+    current_user: UserModel = Depends(is_admin),
+) -> CategorySchema:
     """Создаёт новую категорию."""
 
     await _validate_parent_category(category, database)
@@ -55,6 +60,7 @@ async def update_category(
     category_id: int,
     category: CategoryCreate,
     database: AsyncDatabaseDep,
+    current_user: UserModel = Depends(is_admin),
 ) -> CategorySchema:
     """Обновляет категорию по её ID."""
 
@@ -84,7 +90,11 @@ async def update_category(
     path='/{category_id}',
     status_code=status.HTTP_200_OK,
 )
-async def delete_category(category_id: int, database: AsyncDatabaseDep) -> Mapping[str, str]:
+async def delete_category(
+    category_id: int,
+    database: AsyncDatabaseDep,
+    current_user: UserModel = Depends(is_admin),
+) -> Mapping[str, str]:
     """Удаляет категорию по её ID."""
 
     sql_query = _build_category_query(category_id)

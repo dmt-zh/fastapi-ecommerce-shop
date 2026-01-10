@@ -19,6 +19,6 @@ class UserCreate(BaseModel):
 
     email: EmailStr = Field(description='Email пользователя')
     password: str = Field(min_length=5, description='Пароль (минимум 8 символов)')
-    role: str = Field(default='buyer', pattern='^(buyer|seller)$', description='Роль: "buyer" или "seller"')
+    role: str = Field(default='buyer', pattern='^(buyer|seller|admin)$', description='Роль: "admin", "buyer" или "seller"')
 
 ##############################################################################################
