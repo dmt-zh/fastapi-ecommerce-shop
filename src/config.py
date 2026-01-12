@@ -33,6 +33,7 @@ class Settings(BaseConfigSettings):
     api_service_name: str
     api_secret_key: str
     api_access_token_expire_minutes: int | float
+    api_refresh_token_expire_days: int
     api_jwt_encode_algorithm: str
 
     postgres_user: str

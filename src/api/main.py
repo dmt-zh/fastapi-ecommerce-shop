@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from src.config import get_settings
 from src.routes import categories, products, users
 from src.services.database.factory import make_database
-from src.utils import setup_logger
+from src.utils.misc import setup_logger
 
 ##############################################################################################
 

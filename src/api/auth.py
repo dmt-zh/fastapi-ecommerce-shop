@@ -9,6 +9,7 @@ from sqlalchemy import select
 from src.config import get_settings
 from src.dependencies import AsyncDatabaseDep
 from src.models import User as UserModel
+from src.utils.routes import _validate_jwt_payload
 
 ##############################################################################################
 
@@ -32,12 +33,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 ##############################################################################################
 
-def create_access_token(data: dict) -> str:
-    """Создаёт JWT с payload (sub, role, id, exp)."""
+def create_token(data: dict, access: bool) -> str:
+    """Создаёт JWT с payload (sub, role, id, exp, type)."""
 
     to_encode = data.copy()
-    expire = datetime.now(UTC) + timedelta(minutes=settings.api_access_token_expire_minutes)
-    to_encode.update({'exp': expire})
+    time_delta = timedelta(minutes=settings.api_access_token_expire_minutes) if access else timedelta(days=settings.api_refresh_token_expire_days)
+    token_type = 'access' if access else 'refresh'
+
+    expire = datetime.now(UTC) + time_delta
+    to_encode.update({'exp': expire, 'token_type': token_type})
     return jwt.encode(to_encode, settings.api_secret_key, algorithm=settings.api_jwt_encode_algorithm)
 
 ##############################################################################################
@@ -45,37 +49,12 @@ def create_access_token(data: dict) -> str:
 async def get_current_user(database: AsyncDatabaseDep, token: str = Depends(oauth2_scheme)) -> UserModel:
     """Проверяет JWT и возвращает пользователя из базы."""
 
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Could not validate credentials',
-        headers={'WWW-Authenticate': 'Bearer'},
+    return await _validate_jwt_payload(
+        token=token,
+        secret_key=settings.api_secret_key,
+        algorithm=settings.api_jwt_encode_algorithm,
+        database=database,
     )
-
-    try:
-        payload = jwt.decode(
-            token,
-            settings.api_secret_key,
-            algorithms=[settings.api_jwt_encode_algorithm],
-        )
-        email = payload.get('sub')
-        if email is None:
-            raise credentials_exception from None
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Token has expired',
-            headers={'WWW-Authenticate': 'Bearer'},
-        ) from None
-    except jwt.PyJWTError:
-        raise credentials_exception from None
-
-    result = await database.scalars(
-        select(UserModel).where(UserModel.email == email, UserModel.is_active == True))
-    user = result.first()
-    if user is None:
-        raise credentials_exception from None
-
-    return user
 
 ##############################################################################################
 
@@ -83,14 +62,20 @@ async def get_current_seller(current_user: UserModel = Depends(get_current_user)
     """Проверяет, что пользователь имеет роль 'seller'."""
 
     if current_user.role != 'seller':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Only sellers can perform this action.')
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Only sellers can perform this action.'
+        )
     return current_user
 
 ##############################################################################################
 
 async def is_admin(current_user: UserModel = Depends(get_current_user)):
     if current_user.role != 'admin':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Only admin can change or add new categories.')
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Only admin can change or add new categories.'
+        )
     return current_user
 
 ##############################################################################################

@@ -6,7 +6,7 @@ from sqlalchemy import select, update
 from src.api.auth import get_current_seller
 from src.dependencies import AsyncDatabaseDep
 from src.models import Product as ProductModel, User as UserModel
-from src.routes.utils import _validate_parent_category, _validate_product_by_id
+from src.utils.routes import _validate_parent_category, _validate_product_by_id
 from src.schemas import Product as ProductSchema, ProductCreate
 
 ##############################################################################################
