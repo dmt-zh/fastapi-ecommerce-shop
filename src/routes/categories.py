@@ -6,8 +6,8 @@ from sqlalchemy import select, update
 from src.api.auth import is_admin
 from src.dependencies import AsyncDatabaseDep
 from src.models import Category as CategoryModel, User as UserModel
-from src.utils.routes import _build_category_query, _validate_parent_category
 from src.schemas import Category as CategorySchema, CategoryCreate
+from src.utils.routes import _build_category_query, _validate_parent_category
 
 ##############################################################################################
 

@@ -1,12 +1,13 @@
-import jwt
 from collections.abc import Mapping
+
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
+
 from src.api.auth import create_token, hash_password, verify_password
 from src.dependencies import AsyncDatabaseDep, OAuth2PasswordRequestFormDep, SettingsDep
 from src.models.users import User as UserModel
+from src.schemas.users import RefreshTokenRequest, User as UserSchema, UserCreate
 from src.utils.routes import CredentialsException, _validate_jwt_payload
-from src.schemas.users import User as UserSchema, UserCreate, RefreshTokenRequest
 
 ##############################################################################################
 
@@ -50,7 +51,7 @@ async def login(form_data: OAuth2PasswordRequestFormDep, database: AsyncDatabase
     )
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise CredentialsException(detail='Incorrect email or password')
-    
+
     access_token = create_token(
         data={'sub': user.email, 'role': user.role, 'id': user.id},
         access=True,

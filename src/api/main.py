@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from src.config import get_settings
-from src.routes import categories, products, users
+from src.routes import categories, products, reviews, users
 from src.services.database.factory import make_database
 from src.utils.misc import setup_logger
 
@@ -49,12 +49,13 @@ app = FastAPI(
 
 app.include_router(categories.router)
 app.include_router(products.router)
+app.include_router(reviews.router)
 app.include_router(users.router)
 
 ##############################################################################################
 
 @app.get('/')
-async def root():
+async def root() -> dict[str, str]:
     """Корневой маршрут, подтверждающий, что API работает."""
 
     return {'message': 'Добро пожаловать в API интернет-магазина!'}

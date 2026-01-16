@@ -1,5 +1,6 @@
 from src.models.categories import Category
 from src.models.products import Product
+from src.models.reviews import Review
 from src.models.users import User
 
-__all__ = ['Category', 'Product', 'User']
+__all__ = ['Category', 'Product', 'Review', 'User']

@@ -135,7 +135,7 @@ make init-migrations
 
 
 Далее необходимо выполнить изменения в файле `./src/migrations/env.py`:
-- импортировать `Base` и `PostgreSQLDatabase` из `src.services.database.postgresq`, а также модели `Category` и `Product`:
+- импортировать `Base` и `PostgreSQLDatabase` из `src.services.database.postgresq`, а также модели из `src`:
 ```python
 from src import models
 from src.services.database.postgresql import Base, PostgreSQLDatabase

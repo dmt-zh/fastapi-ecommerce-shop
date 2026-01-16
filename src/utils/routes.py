@@ -2,9 +2,10 @@ import jwt
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.sql.selectable import Select
+
 from src.dependencies import AsyncDatabaseDep
-from src.models.users import User as UserModel
 from src.models import Category as CategoryModel, Product as ProductModel
+from src.models.users import User as UserModel
 from src.schemas import CategoryCreate
 
 ##############################################################################################
@@ -65,7 +66,7 @@ class CredentialsException(HTTPException):
     def __init__(self, detail: str = 'Could not validate credentials') -> None:
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=detail, 
+            detail=detail,
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
@@ -97,7 +98,7 @@ async def _validate_jwt_payload(
         select(UserModel).where(
             UserModel.email == email,
             UserModel.is_active == True,
-        )
+        ),
     )
     if user is None:
         raise CredentialsException(detail='Could not validate token: inactive user')

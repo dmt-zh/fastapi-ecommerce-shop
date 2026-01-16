@@ -12,6 +12,12 @@ env/
 venv/
 ENV/
 
+# mypy
+.cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
 # Dirs and files
 .DS_Store
 Thumbs.db
@@ -20,6 +26,7 @@ ecomerce.db
 ecommerce
 sql_alchemy.py
 endpoints.py
+scripts
 src/migrations/*
 !src/migrations/env.py
 !src/migrations/README

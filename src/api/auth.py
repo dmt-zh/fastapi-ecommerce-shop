@@ -4,7 +4,6 @@ import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-from sqlalchemy import select
 
 from src.config import get_settings
 from src.dependencies import AsyncDatabaseDep
@@ -64,17 +63,31 @@ async def get_current_seller(current_user: UserModel = Depends(get_current_user)
     if current_user.role != 'seller':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Only sellers can perform this action.'
+            detail='Only sellers can perform this action.',
         )
     return current_user
 
 ##############################################################################################
 
 async def is_admin(current_user: UserModel = Depends(get_current_user)):
+    """Проверяет, что пользователь имеет роль 'admin'."""
+
     if current_user.role != 'admin':
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Only admin can change or add new categories.'
+            detail='Only admin can change or add new categories.',
+        )
+    return current_user
+
+##############################################################################################
+
+async def is_buyer(current_user: UserModel = Depends(get_current_user)):
+    """Проверяет, что пользователь имеет роль 'buyer'."""
+
+    if current_user.role != 'buyer':
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Only buyers allowed to create reviews.',
         )
     return current_user
 
