@@ -1,7 +1,6 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from os import environ
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from src.config import get_settings
@@ -11,19 +10,18 @@ from src.utils.misc import setup_logger
 
 ##############################################################################################
 
-load_dotenv()
+settings = get_settings()
 
 ##############################################################################################
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> None:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Управляет жизненным циклом приложения FastAPI.
 
     Выполняет инициализацию ресурсов перед запуском приложения и их
     корректное освобождение при завершении работы.
     """
 
-    settings = get_settings()
     app.state.settings = settings
 
     logger = setup_logger(debug=settings.api_debug)
@@ -41,9 +39,9 @@ async def lifespan(app: FastAPI) -> None:
 ##############################################################################################
 
 app = FastAPI(
-    title=environ.get('API_SERVICE_NAME', 'FastAPI backend'),
-    version=environ.get('API_VERSION', '0.1.0'),
-    debug=environ.get('API_DEBUG', False),
+    title=settings.api_service_name,
+    version=settings.api_version,
+    debug=settings.api_debug,
     lifespan=lifespan,
 )
 

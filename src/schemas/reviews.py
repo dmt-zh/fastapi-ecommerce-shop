@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 ##############################################################################################
 
@@ -14,6 +14,7 @@ class Review(BaseModel):
     comment_date: datetime = Field(description='Дата оставления отзыва')
     grade: int = Field(description='Оценка пользователя по товару')
     is_active: bool = Field(description='Является ли отзыв активным или удаленным.')
+    model_config = ConfigDict(from_attributes=True)
 
 ##############################################################################################
 

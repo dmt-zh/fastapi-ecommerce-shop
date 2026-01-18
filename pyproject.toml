@@ -77,8 +77,8 @@ select = [
     "UP",     # pyupgrade
     "RUF",    # ruff-specific rules
     "TRY",    # tryceratops
-    "D101",
-    "D103",
+    "D101",   # undocumented-public-class
+    "D103",   # undocumented-public-function
 ]
 allowed-confusables = ["е", "с", "о", "г"]
 ignore = [
@@ -87,15 +87,11 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"src/api/auth.py" = ["E712"]
+"src/api/auth.py" = ["E712", "B008", "RUF029"]
 "src/api/main.py" = ["PLW1508"]
-"src/models/categories.py" = ["D101", "F821"]
-"src/models/products.py" = ["D101", "F821"]
-"src/models/users.py" = ["D101", "F821"]
-"src/routes/products.py" = ["E712", "B008"]
-"src/routes/categories.py" = ["E712"]
-"src/routes/utils.py" = ["E712"]
-"src/routes/users.py" = ["E712"]
+"src/models/*.py" = ["D101", "F821"]
+"src/routes/*.py" = ["E712", "B008"]
+"src/utils/routes.py" = ["E712"]
 "src/migrations/env.py" = ["D103", "E712"]
 
 [tool.ruff.lint.flake8-tidy-imports]
@@ -122,7 +118,7 @@ multi_line_output = 3
 #####################################################################################################
 
 [tool.mypy]
-cache_dir = '.cache/.mypy'
+cache_dir = '~/.cache/.mypy'
 python_version = '3.13'
 platform = 'linux'
 namespace_packages = true

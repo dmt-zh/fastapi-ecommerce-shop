@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -21,18 +22,18 @@ settings = get_settings()
 def hash_password(password: str) -> str:
     """Преобразует пароль в хеш с использованием bcrypt."""
 
-    return pwd_context.hash(password)
+    return str(pwd_context.hash(password))
 
 ##############################################################################################
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Проверяет, соответствует ли введённый пароль сохранённому хешу."""
 
-    return pwd_context.verify(plain_password, hashed_password)
+    return bool(pwd_context.verify(plain_password, hashed_password))
 
 ##############################################################################################
 
-def create_token(data: dict, access: bool) -> str:
+def create_token(data: dict[str, str | int | datetime], access: bool) -> str:
     """Создаёт JWT с payload (sub, role, id, exp, type)."""
 
     to_encode = data.copy()
@@ -57,38 +58,18 @@ async def get_current_user(database: AsyncDatabaseDep, token: str = Depends(oaut
 
 ##############################################################################################
 
-async def get_current_seller(current_user: UserModel = Depends(get_current_user)) -> UserModel:
-    """Проверяет, что пользователь имеет роль 'seller'."""
+def is_authorized(permissions: Sequence[str]) -> Callable[[UserModel], Awaitable[UserModel]]:
+    """Проверяет, что пользователь имеет соответствующую роль для выполнения операции."""
 
-    if current_user.role != 'seller':
+    async def _is_authorized(current_user: UserModel = Depends(get_current_user)) -> UserModel:
+        if current_user.role in permissions:
+            return current_user
+
+        allowed_roles = ', '.join(permissions)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Only sellers can perform this action.',
+            detail=f'Only [{allowed_roles}] allowed to prerform this action',
         )
-    return current_user
-
-##############################################################################################
-
-async def is_admin(current_user: UserModel = Depends(get_current_user)):
-    """Проверяет, что пользователь имеет роль 'admin'."""
-
-    if current_user.role != 'admin':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Only admin can change or add new categories.',
-        )
-    return current_user
-
-##############################################################################################
-
-async def is_buyer(current_user: UserModel = Depends(get_current_user)):
-    """Проверяет, что пользователь имеет роль 'buyer'."""
-
-    if current_user.role != 'buyer':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail='Only buyers allowed to create reviews.',
-        )
-    return current_user
+    return _is_authorized
 
 ##############################################################################################

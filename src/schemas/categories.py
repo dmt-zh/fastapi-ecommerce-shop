@@ -12,7 +12,6 @@ class Category(BaseModel):
         default=None,
         description='ID родительской категории, если есть',
     )
-
     model_config = ConfigDict(from_attributes=True)
 
 ##############################################################################################

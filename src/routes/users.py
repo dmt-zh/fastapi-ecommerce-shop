@@ -20,7 +20,7 @@ router = APIRouter(prefix='/users', tags=['users'])
     response_model=UserSchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_user(user: UserCreate, database: AsyncDatabaseDep) -> UserSchema:
+async def create_user(user: UserCreate, database: AsyncDatabaseDep) -> UserModel:
     """Регистрирует нового пользователя с ролью 'buyer' или 'seller'."""
 
     result = await database.scalars(select(UserModel).where(UserModel.email == user.email))
@@ -65,7 +65,7 @@ async def login(form_data: OAuth2PasswordRequestFormDep, database: AsyncDatabase
 ##############################################################################################
 
 @router.post(path='/refresh-token')
-async def refresh_token(
+async def update_refresh_token(
     body: RefreshTokenRequest,
     database: AsyncDatabaseDep,
     settings: SettingsDep,
@@ -89,12 +89,12 @@ async def refresh_token(
 ##############################################################################################
 
 @router.post(path='/access-token')
-async def access_token(
+async def update_access_token(
     body: RefreshTokenRequest,
     database: AsyncDatabaseDep,
     settings: SettingsDep,
 ) -> Mapping[str, str]:
-    """Обновляет refresh-токен, принимая старый refresh-токен в теле запроса."""
+    """Обновляет access-токен, принимая старый refresh-токен в теле запроса."""
 
     user = await _validate_jwt_payload(
         token=body.refresh_token,

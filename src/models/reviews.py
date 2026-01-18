@@ -1,9 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.services.database.postgresql import Base
+
+if TYPE_CHECKING:
+    from src.models import Product, User
 
 ##############################################################################################
 

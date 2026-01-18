@@ -3,7 +3,7 @@ from collections.abc import Mapping, Sequence
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 
-from src.api.auth import get_current_seller
+from src.api.auth import is_authorized
 from src.dependencies import AsyncDatabaseDep
 from src.models import Product as ProductModel, User as UserModel
 from src.schemas import Product as ProductSchema, ProductCreate
@@ -22,7 +22,7 @@ router = APIRouter(
     path='/',
     response_model=Sequence[ProductSchema],
 )
-async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductSchema] | list:
+async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductModel]:
     """Возвращает список всех товаров."""
 
     sql_query = select(ProductModel).where(ProductModel.is_active == True)
@@ -36,7 +36,7 @@ async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductSchema
     response_model=ProductSchema,
     status_code=status.HTTP_200_OK,
 )
-async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductSchema:
+async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductModel:
     """Возвращает детальную информацию о товаре по его ID."""
 
     product = await _validate_product_by_id(product_id, database)
@@ -54,7 +54,7 @@ async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductSch
 async def get_products_by_category(
     category_id: int,
     database: AsyncDatabaseDep,
-) -> Sequence[ProductSchema] | list:
+) -> Sequence[ProductModel]:
     """Возвращает список товаров в указанной категории по её ID."""
 
     await _validate_parent_category(category_id, database)
@@ -76,8 +76,8 @@ async def get_products_by_category(
 async def create_product(
     product: ProductCreate,
     database: AsyncDatabaseDep,
-    current_user: UserModel = Depends(get_current_seller),
-) -> ProductSchema:
+    current_user: UserModel = Depends(is_authorized(permissions=('seller',))),
+) -> ProductModel:
     """Создаёт новый товар."""
 
     await _validate_parent_category(product.category_id, database)
@@ -99,12 +99,12 @@ async def update_product(
     product_id: int,
     product: ProductCreate,
     database: AsyncDatabaseDep,
-    current_user: UserModel = Depends(get_current_seller),
-) -> ProductSchema:
+    current_user: UserModel = Depends(is_authorized(permissions=('seller',))),
+) -> ProductModel:
     """Обновляет товар по его ID."""
 
     product_to_update = await _validate_product_by_id(product_id, database)
-    await _validate_parent_category(product_to_update.category_id, database)
+    await _validate_parent_category(product.category_id, database)
 
     if product_to_update.seller_id != current_user.id:
         raise HTTPException(
@@ -131,7 +131,7 @@ async def update_product(
 async def delete_product(
     product_id: int,
     database: AsyncDatabaseDep,
-    current_user: UserModel = Depends(get_current_seller),
+    current_user: UserModel = Depends(is_authorized(permissions=('seller',))),
 ) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
 

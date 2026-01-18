@@ -35,3 +35,6 @@ lint-check: # Проверка кода на наличие ошибок без 
 
 lint-fix: # Исправление ошибок в коде с помощью ruff
 	@uv run ruff check --fix $(CHECK_DIRS)
+
+type-check: # Cтатическая проверка типов в Python
+	@uv run poe all

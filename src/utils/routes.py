@@ -1,16 +1,16 @@
 import jwt
 from fastapi import HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql import Select, func
 
 from src.dependencies import AsyncDatabaseDep
-from src.models import Category as CategoryModel, Product as ProductModel
+from src.models import Category as CategoryModel, Product as ProductModel, Review as ReviewModel
 from src.models.users import User as UserModel
 from src.schemas import CategoryCreate
 
 ##############################################################################################
 
-def _build_category_query(category: CategoryCreate | int) -> Select:
+def _build_category_query(category: CategoryCreate | int) -> Select[tuple[CategoryModel]]:
     """Формируется базовый запрос для извлечения категорий."""
 
     category_id = category if isinstance(category, int) else category.parent_id
@@ -35,7 +35,7 @@ async def _validate_parent_category(category: CategoryCreate | int, database: As
 
 ##############################################################################################
 
-async def _validate_product_by_id(product_id: int, database: AsyncDatabaseDep) -> ProductModel | None:
+async def _validate_product_by_id(product_id: int, database: AsyncDatabaseDep) -> ProductModel:
     """Проверяется наличие товара по указанному идентификатору."""
 
     sql_query = select(ProductModel).where(
@@ -47,6 +47,23 @@ async def _validate_product_by_id(product_id: int, database: AsyncDatabaseDep) -
     if product_item is None:
         raise HTTPException(status_code=404, detail='Product not found')
     return product_item
+
+##############################################################################################
+
+async def _update_product_rating(product_id: int, database: AsyncDatabaseDep) -> None:
+    """Пересчёт рейтинга товара при добавлении отзыва."""
+
+    result = await database.execute(
+        select(func.avg(ReviewModel.grade)).where(
+            ReviewModel.product_id == product_id,
+            ReviewModel.is_active == True,
+        ),
+    )
+    avg_rating = result.scalar() or 0.0
+    product = await database.get(ProductModel, product_id)
+    if product is not None:
+        product.rating = avg_rating
+        await database.commit()
 
 ##############################################################################################
 
@@ -84,15 +101,14 @@ async def _validate_jwt_payload(
     try:
         payload = jwt.decode(token, secret_key, algorithms=[algorithm])
         email = payload.get('sub')
-        token_type = payload.get('token_type', '')
         token_condition = payload.get('token_type').startswith('refresh') if type_check else True
 
         if email is None or not token_condition:
-            raise CredentialsException(detail='Could not validate token: email or token_type is invalid')
+            raise CredentialsException(detail='Could not validate token: email or token_type is invalid') from None
     except jwt.ExpiredSignatureError:
-        raise CredentialsException(detail='Could not validate token: it has expired')
+        raise CredentialsException(detail='Could not validate token: it has expired') from None
     except jwt.PyJWTError:
-        raise CredentialsException(detail='Could not validate token: payload decoding error')
+        raise CredentialsException(detail='Could not validate token: payload decoding error') from None
 
     user = await database.scalar(
         select(UserModel).where(

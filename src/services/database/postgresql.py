@@ -1,7 +1,7 @@
-from logging import Logger
+from logging import Logger, getLogger
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from src.config import Settings
@@ -21,9 +21,9 @@ class PostgreSQLDatabase:
         self._user = settings.postgres_user
         self._password = settings.postgres_password
         self._echo_sql = settings.postgres_echo_sql
-        self._logger = logger
-        self._engine = None
-        self.session_factory = None
+        self._logger = logger or getLogger(__name__)
+        self._engine: AsyncEngine | None = None
+        self.session_factory: async_sessionmaker[AsyncSession] | None = None
 
     ##########################################################################################
 

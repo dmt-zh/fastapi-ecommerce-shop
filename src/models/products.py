@@ -1,9 +1,13 @@
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Float, ForeignKey, Integer, Numeric, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.services.database.postgresql import Base
+
+if TYPE_CHECKING:
+    from src.models import Category, Review, User
 
 ##############################################################################################
 

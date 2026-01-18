@@ -3,7 +3,7 @@ from collections.abc import Mapping, Sequence
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, update
 
-from src.api.auth import is_admin
+from src.api.auth import is_authorized
 from src.dependencies import AsyncDatabaseDep
 from src.models import Category as CategoryModel, User as UserModel
 from src.schemas import Category as CategorySchema, CategoryCreate
@@ -22,7 +22,7 @@ router = APIRouter(
     path='/',
     response_model=Sequence[CategorySchema],
 )
-async def get_all_categories(database: AsyncDatabaseDep) -> Sequence[CategorySchema] | list:
+async def get_all_categories(database: AsyncDatabaseDep) -> Sequence[CategoryModel]:
     """Возвращает список всех категорий товаров."""
 
     sql_query = select(CategoryModel).where(CategoryModel.is_active == True)
@@ -39,8 +39,8 @@ async def get_all_categories(database: AsyncDatabaseDep) -> Sequence[CategorySch
 async def create_category(
     category: CategoryCreate,
     database: AsyncDatabaseDep,
-    current_user: UserModel = Depends(is_admin),
-) -> CategorySchema:
+    current_user: UserModel = Depends(is_authorized(permissions=('admin',))),
+) -> CategoryModel:
     """Создаёт новую категорию."""
 
     await _validate_parent_category(category, database)
@@ -60,13 +60,13 @@ async def update_category(
     category_id: int,
     category: CategoryCreate,
     database: AsyncDatabaseDep,
-    current_user: UserModel = Depends(is_admin),
-) -> CategorySchema:
+    current_user: UserModel = Depends(is_authorized(permissions=('admin',))),
+) -> CategoryModel:
     """Обновляет категорию по её ID."""
 
     sql_query = _build_category_query(category_id)
     categories = await database.scalars(sql_query)
-    category_to_update = categories.first()
+    category_to_update: CategoryModel | None = categories.first()
     if category_to_update is None:
         raise HTTPException(
             status_code=404,
@@ -93,7 +93,7 @@ async def update_category(
 async def delete_category(
     category_id: int,
     database: AsyncDatabaseDep,
-    current_user: UserModel = Depends(is_admin),
+    current_user: UserModel = Depends(is_authorized(permissions=('admin',))),
 ) -> Mapping[str, str]:
     """Удаляет категорию по её ID."""
 
