@@ -3,7 +3,6 @@ from typing import Annotated, cast
 
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordRequestForm
-# from src.services.database.postgresql import Base
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import Settings
@@ -26,7 +25,6 @@ async def get_async_db_session(request: Request) -> AsyncGenerator[AsyncSession]
 ##############################################################################################
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
-# AsyncDatabaseDep = Annotated[Base, Depends(get_async_db_session)]
 AsyncDatabaseDep = Annotated[AsyncSession, Depends(get_async_db_session)]
 OAuth2PasswordRequestFormDep = Annotated[OAuth2PasswordRequestForm, Depends()]
 
