@@ -8,8 +8,6 @@ from src.services.database.postgresql import Base
 if TYPE_CHECKING:
     from src.models import Product, Review
 
-##############################################################################################
-
 class User(Base):
     __tablename__ = 'users'
 
@@ -21,5 +19,3 @@ class User(Base):
 
     products: Mapped[list['Product']] = relationship('Product', back_populates='seller')
     reviews: Mapped[list['Review']] = relationship('Review', back_populates='user')
-
-##############################################################################################

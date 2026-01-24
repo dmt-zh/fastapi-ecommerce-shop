@@ -79,12 +79,21 @@ select = [
     "TRY",    # tryceratops
     "D101",   # undocumented-public-class
     "D103",   # undocumented-public-function
+    "D200",   # unnecessary-multiline-docstring
+    "D201",   # blank-line-before-function
+    "D202",   # blank-line-after-function
+    "D204",   # incorrect-blank-line-after-class
+    "D212",   # multi-line-summary-first-line
+    "D300",   # triple-quotes
 ]
 allowed-confusables = ["е", "с", "о", "г"]
 ignore = [
     "E302", # blank-lines-top-level
     "E305", # blank-lines-after-function-or-class
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google" # enforces PEP 257 one-liners by default
 
 [tool.ruff.lint.per-file-ignores]
 "src/api/auth.py" = ["E712", "B008", "RUF029"]
@@ -96,6 +105,11 @@ ignore = [
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+multiline-quotes = "double"
+docstring-quotes = "double"
 
 #####################################################################################################
 # isort

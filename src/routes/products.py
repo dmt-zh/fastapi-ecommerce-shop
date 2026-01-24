@@ -1,35 +1,62 @@
 from collections.abc import Mapping, Sequence
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, update
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, select, update
 
 from src.api.auth import is_authorized
 from src.dependencies import AsyncDatabaseDep
 from src.models import Product as ProductModel, User as UserModel
-from src.schemas import Product as ProductSchema, ProductCreate
+from src.schemas import Product as ProductSchema, ProductCreate, ProductList, ProductsRequest
 from src.utils.routes import _validate_parent_category, _validate_product_by_id
 
-##############################################################################################
+router = APIRouter(prefix='/products', tags=['products'])
 
-router = APIRouter(
-    prefix='/products',
-    tags=['products'],
-)
-
-##############################################################################################
 
 @router.get(
     path='/',
-    response_model=Sequence[ProductSchema],
+    response_model=ProductList,
 )
-async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductModel]:
-    """Возвращает список всех товаров."""
+async def get_all_products(
+    request: Annotated[ProductsRequest, Query()],
+    database: AsyncDatabaseDep,
+) -> Mapping[str, Sequence[ProductModel] | int]:
+    """Возвращает список всех активных товаров."""
+    if request.min_price is not None and request.max_price is not None and request.min_price > request.max_price:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="min_price не может быть больше max_price",
+        )
 
-    sql_query = select(ProductModel).where(ProductModel.is_active == True)
-    products = await database.scalars(sql_query)
-    return products.all()
+    filters = [ProductModel.is_active == True]
+    if request.category_id is not None:
+        filters.append(ProductModel.category_id == request.category_id)
+    if request.min_price is not None:
+        filters.append(ProductModel.price >= request.min_price)
+    if request.max_price is not None:
+        filters.append(ProductModel.price <= request.max_price)
+    if request.in_stock is not None:
+        filters.append(ProductModel.stock > 0 if request.in_stock else ProductModel.stock == 0)
+    if request.seller_id is not None:
+        filters.append(ProductModel.seller_id == request.seller_id)
 
-##############################################################################################
+    sql_query = select(func.count()).select_from(ProductModel).where(*filters)
+    total = await database.scalar(sql_query) or 0
+
+    products_query = select(ProductModel) \
+        .where(*filters) \
+        .order_by(ProductModel.id) \
+        .offset((request.page - 1) * request.page_size) \
+        .limit(request.page_size)
+
+    items = (await database.scalars(products_query)).all()
+    return {
+        'items': items,
+        'total': total,
+        'page': request.page,
+        'page_size': request.page_size,
+    }
+
 
 @router.get(
     path='/{product_id}',
@@ -38,13 +65,11 @@ async def get_all_products(database: AsyncDatabaseDep) -> Sequence[ProductModel]
 )
 async def get_product(product_id: int, database: AsyncDatabaseDep) -> ProductModel:
     """Возвращает детальную информацию о товаре по его ID."""
-
     product = await _validate_product_by_id(product_id, database)
     await _validate_parent_category(product.category_id, database)
 
     return product
 
-##############################################################################################
 
 @router.get(
     path='/category/{category_id}',
@@ -56,7 +81,6 @@ async def get_products_by_category(
     database: AsyncDatabaseDep,
 ) -> Sequence[ProductModel]:
     """Возвращает список товаров в указанной категории по её ID."""
-
     await _validate_parent_category(category_id, database)
     sql_query = select(ProductModel).where(
         ProductModel.category_id == category_id,
@@ -66,7 +90,6 @@ async def get_products_by_category(
 
     return products.all()
 
-##############################################################################################
 
 @router.post(
     path='/',
@@ -79,7 +102,6 @@ async def create_product(
     current_user: UserModel = Depends(is_authorized(permissions=('seller',))),
 ) -> ProductModel:
     """Создаёт новый товар."""
-
     await _validate_parent_category(product.category_id, database)
     new_product = ProductModel(**product.model_dump(), seller_id=current_user.id)
     database.add(new_product)
@@ -88,7 +110,6 @@ async def create_product(
 
     return new_product
 
-##############################################################################################
 
 @router.put(
     path='/{product_id}',
@@ -102,7 +123,6 @@ async def update_product(
     current_user: UserModel = Depends(is_authorized(permissions=('seller',))),
 ) -> ProductModel:
     """Обновляет товар по его ID."""
-
     product_to_update = await _validate_product_by_id(product_id, database)
     await _validate_parent_category(product.category_id, database)
 
@@ -122,7 +142,6 @@ async def update_product(
 
     return product_to_update
 
-##############################################################################################
 
 @router.delete(
     path='/{product_id}',
@@ -134,7 +153,6 @@ async def delete_product(
     current_user: UserModel = Depends(is_authorized(permissions=('seller',))),
 ) -> Mapping[str, str]:
     """Удаляет товар по его ID."""
-
     product_to_delete = await _validate_product_by_id(product_id, database)
     if product_to_delete.seller_id != current_user.id:
         raise HTTPException(
@@ -149,5 +167,3 @@ async def delete_product(
     await database.refresh(product_to_delete)
 
     return {'status': 'success', 'message': f'Product with id [{product_id}] marked as inactive'}
-
-##############################################################################################

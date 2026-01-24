@@ -8,11 +8,8 @@ from src.routes import categories, products, reviews, users
 from src.services.database.factory import make_database
 from src.utils.misc import setup_logger
 
-##############################################################################################
-
 settings = get_settings()
 
-##############################################################################################
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -21,7 +18,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Выполняет инициализацию ресурсов перед запуском приложения и их
     корректное освобождение при завершении работы.
     """
-
     app.state.settings = settings
 
     logger = setup_logger(debug=settings.api_debug)
@@ -36,7 +32,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await database.teardown()
     logger.info('API shutdown complete')
 
-##############################################################################################
 
 app = FastAPI(
     title=settings.api_service_name,
@@ -44,21 +39,17 @@ app = FastAPI(
     debug=settings.api_debug,
     lifespan=lifespan,
 )
-
 app.include_router(categories.router)
 app.include_router(products.router)
 app.include_router(reviews.router)
 app.include_router(users.router)
 
-##############################################################################################
 
 @app.get('/')
 async def root() -> dict[str, str]:
     """Корневой маршрут, подтверждающий, что API работает."""
-
     return {'message': 'Добро пожаловать в API интернет-магазина!'}
 
-##############################################################################################
 
 if __name__ == '__main__':
     import uvicorn
@@ -68,5 +59,3 @@ if __name__ == '__main__':
         host='0.0.0.0',
         reload=True,
     )
-
-##############################################################################################

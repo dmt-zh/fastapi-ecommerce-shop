@@ -9,8 +9,6 @@ from src.services.database.postgresql import Base
 if TYPE_CHECKING:
     from src.models import Product, User
 
-##############################################################################################
-
 class Review(Base):
     __tablename__ = 'reviews'
 
@@ -28,5 +26,3 @@ class Review(Base):
     __table_args__ = (
         CheckConstraint("grade >= 1 AND grade <= 5", name="check_grade_range"),
     )
-
-##############################################################################################

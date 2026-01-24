@@ -9,11 +9,8 @@ from src.models.users import User as UserModel
 from src.schemas.users import RefreshTokenRequest, User as UserSchema, UserCreate
 from src.utils.routes import CredentialsException, _validate_jwt_payload
 
-##############################################################################################
-
 router = APIRouter(prefix='/users', tags=['users'])
 
-##############################################################################################
 
 @router.post(
     path='/',
@@ -22,7 +19,6 @@ router = APIRouter(prefix='/users', tags=['users'])
 )
 async def create_user(user: UserCreate, database: AsyncDatabaseDep) -> UserModel:
     """Регистрирует нового пользователя с ролью 'buyer' или 'seller'."""
-
     result = await database.scalars(select(UserModel).where(UserModel.email == user.email))
     if result.first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Email already registered')
@@ -37,12 +33,10 @@ async def create_user(user: UserCreate, database: AsyncDatabaseDep) -> UserModel
     await database.commit()
     return new_user
 
-##############################################################################################
 
 @router.post(path='/token')
 async def login(form_data: OAuth2PasswordRequestFormDep, database: AsyncDatabaseDep) -> Mapping[str, str]:
     """Аутентифицирует пользователя и возвращает JWT с email, role и id."""
-
     user = await database.scalar(
         select(UserModel).where(
             UserModel.email == form_data.username,
@@ -62,7 +56,6 @@ async def login(form_data: OAuth2PasswordRequestFormDep, database: AsyncDatabase
     )
     return {'access_token': access_token, 'refresh_token': refresh_token, 'token_type': 'bearer'}
 
-##############################################################################################
 
 @router.post(path='/refresh-token')
 async def update_refresh_token(
@@ -71,7 +64,6 @@ async def update_refresh_token(
     settings: SettingsDep,
 ) -> Mapping[str, str]:
     """Обновляет refresh-токен, принимая старый refresh-токен в теле запроса."""
-
     user = await _validate_jwt_payload(
         token=body.refresh_token,
         secret_key=settings.api_secret_key,
@@ -86,7 +78,6 @@ async def update_refresh_token(
 
     return {'refresh_token': new_refresh_token, 'token_type': 'bearer'}
 
-##############################################################################################
 
 @router.post(path='/access-token')
 async def update_access_token(
@@ -95,7 +86,6 @@ async def update_access_token(
     settings: SettingsDep,
 ) -> Mapping[str, str]:
     """Обновляет access-токен, принимая старый refresh-токен в теле запроса."""
-
     user = await _validate_jwt_payload(
         token=body.refresh_token,
         secret_key=settings.api_secret_key,
@@ -109,5 +99,3 @@ async def update_access_token(
     )
 
     return {'access_token': new_access_token, 'token_type': 'bearer'}
-
-##############################################################################################

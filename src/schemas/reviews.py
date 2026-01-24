@@ -2,7 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-##############################################################################################
 
 class Review(BaseModel):
     """Модель для ответа с данными отзывов по товарам. Используется в GET-запросах."""
@@ -16,7 +15,6 @@ class Review(BaseModel):
     is_active: bool = Field(description='Является ли отзыв активным или удаленным.')
     model_config = ConfigDict(from_attributes=True)
 
-##############################################################################################
 
 class ReviewCreate(BaseModel):
     """Модель для создания и обновления отзывов по товарам. Используется в POST и PUT запросах."""
@@ -24,5 +22,3 @@ class ReviewCreate(BaseModel):
     product_id: int = Field(description='Уникальный идентификатор товара')
     comment: str | None = Field(default=None, description='Текст отзыва по товару')
     grade: int = Field(ge=1, le=5, description='Оценка пользователя по товару')
-
-##############################################################################################

@@ -8,22 +8,18 @@ from src.models import Category as CategoryModel, Product as ProductModel, Revie
 from src.models.users import User as UserModel
 from src.schemas import CategoryCreate
 
-##############################################################################################
 
 def _build_category_query(category: CategoryCreate | int) -> Select[tuple[CategoryModel]]:
     """Формируется базовый запрос для извлечения категорий."""
-
     category_id = category if isinstance(category, int) else category.parent_id
     return select(CategoryModel).where(
         CategoryModel.id == category_id,
         CategoryModel.is_active == True,
     )
 
-##############################################################################################
 
 async def _validate_parent_category(category: CategoryCreate | int, database: AsyncDatabaseDep) -> None:
     """Проверяется наличие родительской категории."""
-
     if isinstance(category, CategoryCreate) and category.parent_id is None:
         return
 
@@ -33,11 +29,9 @@ async def _validate_parent_category(category: CategoryCreate | int, database: As
     if parent_category is None:
         raise HTTPException(status_code=400, detail='Parent category not found')
 
-##############################################################################################
 
 async def _validate_product_by_id(product_id: int, database: AsyncDatabaseDep) -> ProductModel:
     """Проверяется наличие товара по указанному идентификатору."""
-
     sql_query = select(ProductModel).where(
         ProductModel.id == product_id,
         ProductModel.is_active == True,
@@ -48,11 +42,9 @@ async def _validate_product_by_id(product_id: int, database: AsyncDatabaseDep) -
         raise HTTPException(status_code=404, detail='Product not found')
     return product_item
 
-##############################################################################################
 
 async def _update_product_rating(product_id: int, database: AsyncDatabaseDep) -> None:
     """Пересчёт рейтинга товара при добавлении отзыва."""
-
     result = await database.execute(
         select(func.avg(ReviewModel.grade)).where(
             ReviewModel.product_id == product_id,
@@ -65,7 +57,6 @@ async def _update_product_rating(product_id: int, database: AsyncDatabaseDep) ->
         product.rating = avg_rating
         await database.commit()
 
-##############################################################################################
 
 class CredentialsException(HTTPException):
     """CredentialsException.
@@ -87,7 +78,6 @@ class CredentialsException(HTTPException):
             headers={'WWW-Authenticate': 'Bearer'},
         )
 
-##############################################################################################
 
 async def _validate_jwt_payload(
     token: str,
@@ -97,7 +87,6 @@ async def _validate_jwt_payload(
     type_check: bool = False,
 ) -> UserModel:
     """Проверяет валидность JWT-токена и наличие активного пользователя в базе данных."""
-
     try:
         payload = jwt.decode(token, secret_key, algorithms=[algorithm])
         email = payload.get('sub')
@@ -119,5 +108,3 @@ async def _validate_jwt_payload(
     if user is None:
         raise CredentialsException(detail='Could not validate token: inactive user')
     return user
-
-##############################################################################################

@@ -6,12 +6,10 @@ from sqlalchemy.orm import DeclarativeBase
 
 from src.config import Settings
 
-##############################################################################################
 
 class Base(DeclarativeBase):
     """Базовый класс для декларативных моделей базы данных."""
 
-##############################################################################################
 
 class PostgreSQLDatabase:
     """Реализация базы данных PostgreSQL."""
@@ -25,19 +23,13 @@ class PostgreSQLDatabase:
         self._engine: AsyncEngine | None = None
         self.session_factory: async_sessionmaker[AsyncSession] | None = None
 
-    ##########################################################################################
-
     @property
     def database_url(self) -> str:
         """Формирует асинхронный URL для подключения к PostgreSQL."""
-
         return f'postgresql+asyncpg://{self._user}:{self._password}@localhost:5432/{self._db}'
-
-    ##########################################################################################
 
     async def startup(self) -> None:
         """Инициализация соединения с базой данных."""
-
         try:
             db_url = self.database_url.split('@')[1] if '@' in self.database_url else 'localhost'
             self._logger.info(f'Attempting to connect to PostgreSQL at: {db_url}')
@@ -61,13 +53,8 @@ class PostgreSQLDatabase:
             self._logger.exception('Failed to initialize PostgreSQL database')
             raise
 
-    ##########################################################################################
-
     async def teardown(self) -> None:
         """Закрытие соединения с базой данных."""
-
         if self._engine:
             await self._engine.dispose()
             self._logger.info('PostgreSQL database connections closed')
-
-##############################################################################################

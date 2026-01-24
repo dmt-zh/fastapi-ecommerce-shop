@@ -8,7 +8,6 @@ from src.services.database.postgresql import Base
 if TYPE_CHECKING:
     from src.models import Product
 
-##############################################################################################
 
 class Category(Base):
     __tablename__ = 'categories'
@@ -26,5 +25,3 @@ class Category(Base):
         remote_side='Category.id',
     )
     children: Mapped[list['Category']] = relationship(back_populates='parent')
-
-##############################################################################################
