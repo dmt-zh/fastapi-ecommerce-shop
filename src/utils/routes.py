@@ -1,11 +1,17 @@
 import jwt
 from fastapi import HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import Select, func
 
 from src.dependencies import AsyncDatabaseDep
-from src.models import Category as CategoryModel, Product as ProductModel, Review as ReviewModel
-from src.models.users import User as UserModel
+from src.models import (
+    CartItem as CartItemModel,
+    Category as CategoryModel,
+    Product as ProductModel,
+    Review as ReviewModel,
+    User as UserModel,
+)
 from src.schemas import CategoryCreate
 
 
@@ -56,6 +62,19 @@ async def _update_product_rating(product_id: int, database: AsyncDatabaseDep) ->
     if product is not None:
         product.rating = avg_rating
         await database.commit()
+
+
+async def _get_cart_item(database: AsyncDatabaseDep, user_id: int, product_id: int) -> CartItemModel | None:
+    """Поиск товара в корзине текущего пользователя по product_id."""
+    result = await database.scalars(
+        select(CartItemModel)
+        .options(selectinload(CartItemModel.product))
+        .where(
+            CartItemModel.user_id == user_id,
+            CartItemModel.product_id == product_id,
+        ),
+    )
+    return result.first()
 
 
 class CredentialsException(HTTPException):

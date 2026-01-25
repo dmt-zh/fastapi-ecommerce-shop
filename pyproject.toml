@@ -88,8 +88,9 @@ select = [
 ]
 allowed-confusables = ["е", "с", "о", "г"]
 ignore = [
-    "E302", # blank-lines-top-level
-    "E305", # blank-lines-after-function-or-class
+    "E302",    # blank-lines-top-level
+    "E305",    # blank-lines-after-function-or-class
+    "PLC2701", # import-private-name
 ]
 
 [tool.ruff.lint.pydocstyle]

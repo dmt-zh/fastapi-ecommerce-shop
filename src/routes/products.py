@@ -2,7 +2,7 @@ from collections.abc import Mapping, Sequence
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select, update, or_
+from sqlalchemy import desc, func, or_, select, update
 
 from src.api.auth import is_authorized
 from src.dependencies import AsyncDatabaseDep
@@ -45,7 +45,7 @@ async def get_all_products(
 
     rank_col = None
     if request.search:
-        search_value = search.strip()
+        search_value = request.search.strip()
         if search_value:
             ts_query_en = func.websearch_to_tsquery('english', search_value)
             ts_query_ru = func.websearch_to_tsquery('russian', search_value)
@@ -58,7 +58,7 @@ async def get_all_products(
                 func.ts_rank_cd(ProductModel.tsv, ts_query_en),
                 func.ts_rank_cd(ProductModel.tsv, ts_query_ru),
             ).label('rank')
-            total_stmt = select(func.count()).select_from(ProductModel).where(*filters)
+            sql_query = select(func.count()).select_from(ProductModel).where(*filters)
 
     total = await database.scalar(sql_query) or 0
 
@@ -66,11 +66,11 @@ async def get_all_products(
         products_query = select(ProductModel, rank_col) \
             .where(*filters) \
             .order_by(desc(rank_col), ProductModel.id) \
-            .offset((page - 1) * page_size) \
-            .limit(page_size)
+            .offset((request.page - 1) * request.page_size) \
+            .limit(request.page_size)
 
         rows = (await database.execute(products_query)).all()
-        items = [row[0] for row in rows]
+        items: Sequence[ProductModel] = [row[0] for row in rows]
 
     else:
         products_query = select(ProductModel) \
@@ -80,7 +80,7 @@ async def get_all_products(
             .limit(request.page_size)
 
         items = (await database.scalars(products_query)).all()
-    
+
     return {
         'items': items,
         'total': total,
