@@ -74,6 +74,7 @@ class ProductsRequest(BaseModel):
     page: int = Field(ge=1, default=1, description='Номер страницы для пагинации')
     page_size: int = Field(ge=1, le=100, default=20, description='Количество товаров на одной странице')
     category_id: int | None = Field(None, description='ID категории для фильтрации')
+    search: str | None = Field(None, min_length=1, description='Поиск по названию товара')
     min_price: float | None = Field(None, ge=0, description='Минимальная цена товара')
     max_price: float | None = Field(None, ge=0, description='Максимальная цена товара')
     in_stock: bool | None = Field(None, description='true — только товары в наличии, false — только без остатка')

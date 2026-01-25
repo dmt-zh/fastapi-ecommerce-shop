@@ -23,10 +23,10 @@ create-tables-migration: # Создание таблиц базы данных
 apply-migrations: # Применение миграции
 	@uv run alembic upgrade head
 
-run-app: # Запуск приложения
+app-run: # Запуск приложения
 	@nohup uv run uvicorn src.api.main:app --port 8000 &> backend_server.log
 
-run-app-dev: # Запуск приложения во время разработки
+dev-app-run: # Запуск приложения во время разработки
 	@uv run uvicorn src.api.main:app --port 8000 --reload
 
 lint-check: # Проверка кода на наличие ошибок без внесения изменений
