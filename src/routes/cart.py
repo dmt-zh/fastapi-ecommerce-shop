@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from src.api.auth import is_authorized
 from src.dependencies import AsyncDatabaseDep
-from src.models.catr import CartItem as CartItemModel
+from src.models.cart import CartItem as CartItemModel
 from src.models.users import User as UserModel
 from src.schemas import Cart as CartSchema, CartItem as CartItemSchema, CartItemCreate, CartItemUpdate
 from src.utils.routes import _get_cart_item, _validate_parent_category, _validate_product_by_id

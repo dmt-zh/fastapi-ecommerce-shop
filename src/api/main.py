@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.config import get_settings
-from src.routes import cart, categories, products, reviews, users
+from src.routes import cart, categories, orders, products, reviews, users
 from src.services.database.factory import make_database
 from src.utils.misc import setup_logger
 
@@ -44,6 +44,7 @@ app.include_router(categories.router)
 app.include_router(products.router)
 app.include_router(reviews.router)
 app.include_router(users.router)
+app.include_router(orders.router)
 
 
 @app.get('/')

@@ -1,5 +1,6 @@
 from src.schemas.cart import Cart, CartItem, CartItemCreate, CartItemUpdate
 from src.schemas.categories import Category, CategoryCreate
+from src.schemas.orders import Order, OrderItem, OrderList
 from src.schemas.products import Product, ProductCreate, ProductList, ProductsRequest
 from src.schemas.reviews import Review, ReviewCreate
 from src.schemas.users import User, UserCreate
@@ -11,6 +12,9 @@ __all__ = [
     'CartItemUpdate',
     'Category',
     'CategoryCreate',
+    'Order',
+    'OrderItem',
+    'OrderList',
     'Product',
     'ProductCreate',
     'ProductList',

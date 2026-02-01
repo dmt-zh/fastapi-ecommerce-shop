@@ -8,6 +8,8 @@ from src.dependencies import AsyncDatabaseDep
 from src.models import (
     CartItem as CartItemModel,
     Category as CategoryModel,
+    Order as OrderModel,
+    OrderItem as OrderItemModel,
     Product as ProductModel,
     Review as ReviewModel,
     User as UserModel,
@@ -73,6 +75,18 @@ async def _get_cart_item(database: AsyncDatabaseDep, user_id: int, product_id: i
             CartItemModel.user_id == user_id,
             CartItemModel.product_id == product_id,
         ),
+    )
+    return result.first()
+
+
+async def _load_order_with_items(database: AsyncDatabaseDep, order_id: int) -> OrderModel | None:
+    """Загрузка заказа с товарами."""
+    result = await database.scalars(
+        select(OrderModel)
+        .options(
+            selectinload(OrderModel.items).selectinload(OrderItemModel.product),
+        )
+        .where(OrderModel.id == order_id),
     )
     return result.first()
 
