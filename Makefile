@@ -11,10 +11,10 @@ help: # Отображение сообщения с доступными ком
 init-migrations: # Инициализация среды миграций
 	@uv run alembic init -t async src/migrations
 
-database-up: # Запуск базы данных PostgreSQL в контейнере
-	@docker compose up -d
+start: # Запуск приложения
+	@docker compose up -d --build
 
-database-down: # Остановка базы данных PostgreSQL
+stop: # Остановка приложения
 	@docker compose down
 
 create-tables-migration: # Создание таблиц базы данных

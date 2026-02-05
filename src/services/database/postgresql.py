@@ -18,6 +18,9 @@ class PostgreSQLDatabase:
         self._db = settings.postgres_db
         self._user = settings.postgres_user
         self._password = settings.postgres_password
+        self._host = settings.postgres_host
+        self._port = settings.postgres_port
+
         self._echo_sql = settings.postgres_echo_sql
         self._logger = logger or getLogger(__name__)
         self._engine: AsyncEngine | None = None
@@ -26,7 +29,7 @@ class PostgreSQLDatabase:
     @property
     def database_url(self) -> str:
         """Формирует асинхронный URL для подключения к PostgreSQL."""
-        return f'postgresql+asyncpg://{self._user}:{self._password}@localhost:5432/{self._db}'
+        return f'postgresql+asyncpg://{self._user}:{self._password}@{self._host}:{self._port}/{self._db}'
 
     async def startup(self) -> None:
         """Инициализация соединения с базой данных."""

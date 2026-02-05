@@ -1,4 +1,29 @@
 services:
+  backend:
+    build:
+      context: .
+      args:
+        - API_PORT=${API_PORT}
+    container_name: ecommerce-api
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - PORT=${API_PORT}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\""]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - ecommerce-network
+
   postgres:
     image: postgres:17
     container_name: ecommerce-db
@@ -18,8 +43,9 @@ services:
       retries: 10
     env_file:
       - .env
-
+    networks:
+      - ecommerce-network
 
 networks:
-  default:
-    name: ecommerce-network
+  ecommerce-network:
+    driver: bridge
